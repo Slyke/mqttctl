@@ -1,0 +1,12 @@
+[package]
+name = "mqttctl-broker-agent"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.7.9", features = ["json"] }
+axum-server = { version = "0.7.2", features = ["tls-rustls"] }
+nix = { version = "0.29.0", features = ["signal"] }
+serde = { version = "1.0.216", features = ["derive"] }
+serde_json = "1.0.133"
+tokio = { version = "1.42.0", features = ["fs", "macros", "net", "process", "rt-multi-thread", "signal", "sync", "time"] }

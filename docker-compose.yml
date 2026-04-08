@@ -1,0 +1,39 @@
+services:
+  mqttctl:
+    build:
+      context: .
+      dockerfile: dockerfiles/mqttctl.Dockerfile
+    depends_on:
+      - broker-agent
+    environment:
+      PORT: "3000"
+      HOST: "0.0.0.0"
+      ORIGIN: "http://localhost:3000"
+      MQTTCTL_CONFIG_PATH: /app/config/mqttctl.config.json
+      MQTTCTL_SECRETS_PATH: /app/config/mqttctl.secrets.json
+      MQTTCTL_DB_KIND: sqlite
+      MQTTCTL_SQLITE_PATH: /app/data/mqttctl.sqlite
+      MQTTCTL_UI_OVERRIDE_CSS_PATH: /app/config/custom.css
+      MQTTCTL_LOG_CONSOLE_FORMAT: text
+    volumes:
+      - ./config/compose/gui-api/mqttctl.config.json:/app/config/mqttctl.config.json:ro
+      - ./config/compose/gui-api/mqttctl.secrets.json:/app/config/mqttctl.secrets.json:ro
+      - ./config/compose/gui-api/custom.css:/app/config/custom.css:ro
+      - ./config/compose/gui-api/app-data:/app/data
+    ports:
+      - "3000:3000"
+
+  broker-agent:
+    build:
+      context: .
+      dockerfile: dockerfiles/broker-agent.Dockerfile
+    environment:
+      MQTTCTL_BROKER_AGENT_CONFIG_PATH: /etc/mqttctl/broker-agent.config.json
+      MQTTCTL_LOG_CONSOLE_FORMAT: text
+    volumes:
+      - ./config/compose/mqtt-agent/broker-agent.config.json:/etc/mqttctl/broker-agent.config.json:ro
+      - ./config/compose/mqtt-agent:/mosquitto/config
+      - ./config/compose/mqtt-agent/shared/data:/mosquitto/data
+    ports:
+      - "1883:1883"
+      - "9001:9001"

@@ -1,0 +1,10 @@
+node_modules
+mqttctl/node_modules
+mqttctl/mqttctl-fe/.svelte-kit
+mqttctl/mqttctl-fe/build
+mqttctl/mqttctl-fe/coverage
+mqttctl/mqttctl-api/dist
+broker-agent/target
+config/compose/shared/data
+config/compose/shared/log
+config/compose/app-data

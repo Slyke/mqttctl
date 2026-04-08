@@ -1,0 +1,86 @@
+{
+  "appName": "mqttctl",
+  "publicBaseUrl": "http://localhost:3000",
+  "basePath": "",
+  "ui": {
+    "defaultTheme": "dark",
+    "defaultFont": "ui-mono",
+    "languageFilePath": null
+  },
+  "logging": {
+    "includeCorrelationId": true,
+    "includeUserAgent": true,
+    "includeNormalizedUsername": true,
+    "includeSessionExpiry": true,
+    "sinks": {
+      "console": {
+        "enabled": true,
+        "levels": [
+          "debug",
+          "info",
+          "warn",
+          "error"
+        ],
+        "format": "text"
+      },
+      "file": {
+        "enabled": false,
+        "levels": [
+          "info",
+          "warn",
+          "error"
+        ],
+        "format": "json",
+        "path": null
+      },
+      "curl": {
+        "enabled": false,
+        "levels": [
+          "info",
+          "warn",
+          "error"
+        ],
+        "url": null,
+        "method": "POST",
+        "timeoutMs": 2500
+      }
+    },
+    "failedLoginAttempts": {
+      "level": "warn",
+      "console": true,
+      "file": false,
+      "curl": false
+    },
+    "successfulLogin": {
+      "level": "info",
+      "console": true,
+      "file": false,
+      "curl": false
+    }
+  },
+  "auth": {
+    "localEnabled": true,
+    "oidcEnabled": false,
+    "headerEnabled": false,
+    "sessionTtlMinutes": 1440
+  },
+  "broker": {
+    "host": "broker-agent",
+    "port": 1883,
+    "dynsecAdminUsername": "admin",
+    "controlBinaryPath": "mosquitto_ctrl",
+    "agent": {
+      "baseUrl": "http://broker-agent:3900",
+      "timeoutMs": 60000,
+      "insecure": false
+    },
+    "dynsecStateFilePath": "/mosquitto/data/dynamic-security.json",
+    "mainConfigPath": "/mosquitto/config/mosquitto.conf",
+    "keyFiles": {
+      "caFile": "/mosquitto/config/certs/ca/ca.crt",
+      "mosquittoPublicKey": "/mosquitto/config/certs/mosquitto/tls.crt",
+      "brokerPublicKey": "/mosquitto/config/certs/broker-agent/tls.crt"
+    },
+    "mqttClientId": "mqttctl-compose-admin"
+  }
+}

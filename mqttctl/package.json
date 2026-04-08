@@ -1,0 +1,30 @@
+{
+  "name": "mqttctl-workspace",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "mqttctl-fe",
+    "mqttctl-api"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "npm run start --workspace mqttctl-fe",
+    "dev": "npm run dev --workspace mqttctl-fe",
+    "build": "npm run build:all",
+    "build:fe": "npm run build --workspace mqttctl-fe",
+    "build:api": "npm run build --workspace mqttctl-api",
+    "build:all": "npm run build --workspace mqttctl-api && npm run build --workspace mqttctl-fe",
+    "preview": "npm run preview --workspace mqttctl-fe",
+    "check": "npm run check:all",
+    "check:api": "npm run check --workspace mqttctl-api",
+    "check:fe": "npm run check --workspace mqttctl-fe",
+    "check:all": "npm run check --workspace mqttctl-api && npm run check --workspace mqttctl-fe",
+    "test": "npm run test --workspace mqttctl-fe",
+    "error-validate": "npm run error-validate:api && npm run error-validate:fe",
+    "error-validate:api": "npm run error-validate --workspace mqttctl-api",
+    "error-validate:fe": "npm run error-validate --workspace mqttctl-fe"
+  }
+}

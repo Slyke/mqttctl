@@ -1,0 +1,22 @@
+:root {
+  --color-start: #3bd4ff;
+  --color-start-soft: rgba(59, 212, 255, 0.18);
+  --color-start-border: rgba(59, 212, 255, 0.62);
+  --color-mid: #6be587;
+  --color-mid-soft: rgba(107, 229, 135, 0.18);
+  --color-mid-border: rgba(107, 229, 135, 0.58);
+  --color-warning: #ffcf54;
+  --color-warning-soft: rgba(255, 207, 84, 0.18);
+  --color-warning-border: rgba(255, 207, 84, 0.5);
+  --color-danger: #ff7272;
+  --color-danger-soft: rgba(255, 114, 114, 0.2);
+  --color-danger-border: rgba(255, 114, 114, 0.58);
+}
+
+.page-title {
+  letter-spacing: 0.04em;
+}
+
+.panel {
+  border-style: solid;
+}

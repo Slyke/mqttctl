@@ -1,0 +1,38 @@
+{
+  "name": "mqttctl-fe",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "argon2": "latest",
+    "better-sqlite3": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "latest",
+    "@sveltejs/kit": "latest",
+    "@sveltejs/vite-plugin-svelte": "latest",
+    "@types/node": "latest",
+    "svelte": "latest",
+    "svelte-check": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  },
+  "scripts": {
+    "start": "node build",
+    "dev": "vite dev",
+    "prebuild": "node ../scripts/write-build-info.mjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "TMPDIR=/tmp TMP=/tmp TEMP=/tmp vitest run --config ./vitest.config.ts --configLoader runner",
+    "error-add": "node ../../err_gen.js --action add --error-file ./src/errors.json",
+    "error-delete": "node ../../err_gen.js --action delete --error-file ./src/errors.json",
+    "error-rm": "node ../../err_gen.js --action delete --error-file ./src/errors.json",
+    "error-validate": "node ../../err_gen.js --action validate --error-file ./src/errors.json",
+    "error-get": "node ../../err_gen.js --action get --error-file ./src/errors.json",
+    "error-search": "node ../../err_gen.js --action search --error-file ./src/errors.json",
+    "error-all": "node ../../err_gen.js --action all --error-file ./src/errors.json"
+  }
+}

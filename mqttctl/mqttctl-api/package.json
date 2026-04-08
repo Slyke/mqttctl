@@ -1,0 +1,32 @@
+{
+  "name": "mqttctl-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "argon2": "latest",
+    "better-sqlite3": "latest",
+    "drizzle-orm": "latest",
+    "mqtt": "latest",
+    "openid-client": "latest",
+    "pg": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "latest",
+    "@types/node": "latest",
+    "@types/pg": "latest",
+    "typescript": "latest"
+  },
+  "scripts": {
+    "check": "tsc --noEmit -p ./tsconfig.json",
+    "build": "tsc -p ./tsconfig.json",
+    "error-add": "node ../../err_gen.js --action add --error-file ./src/errors.json",
+    "error-delete": "node ../../err_gen.js --action delete --error-file ./src/errors.json",
+    "error-rm": "node ../../err_gen.js --action delete --error-file ./src/errors.json",
+    "error-validate": "node ../../err_gen.js --action validate --error-file ./src/errors.json",
+    "error-get": "node ../../err_gen.js --action get --error-file ./src/errors.json",
+    "error-search": "node ../../err_gen.js --action search --error-file ./src/errors.json",
+    "error-all": "node ../../err_gen.js --action all --error-file ./src/errors.json"
+  }
+}
