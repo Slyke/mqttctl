@@ -4,5 +4,6 @@ These files are the main human-readable guides. Most are operator-facing; [`deve
 
 - [`getting-started.md`](./getting-started.md): quick-start paths for getting the stack running, auth setup, and first use
 - [`advanced-operations.md`](./advanced-operations.md): implementation details for auth, broker-agent mode, DynSec bootstrap, MQTT explorer, snapshots, and logging
+- [`backup-restore.md`](./backup-restore.md): SQLite and Postgres backup or restore runbooks for app data and broker runtime files
 - [`development.md`](./development.md): local dev workflow, tests, and manual contributor commands
 - [`../CERTS.md`](../CERTS.md): TLS walkthrough for Mosquitto listeners and broker-agent HTTPS

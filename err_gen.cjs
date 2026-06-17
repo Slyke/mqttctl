@@ -27,11 +27,42 @@ const normalizePrefix = (prefix) => {
   return v;
 };
 
+const explainErrorCodeFailure = (errorCode) => {
+  const normalized = String(errorCode).toUpperCase();
+  if (normalized.length !== 16) {
+    return {
+      reason: 'format',
+      detail: 'Error code must be exactly 16 hexadecimal characters.',
+      expectedLength: 16,
+      actualLength: normalized.length
+    };
+  }
+
+  if (!/^[0-9A-F]{16}$/.test(normalized)) {
+    return {
+      reason: 'format',
+      detail: 'Error code must contain only hexadecimal characters 0-9 or A-F.'
+    };
+  }
+
+  const payload = normalized.slice(0, 15);
+  const checksum = normalized.slice(15);
+  const expectedChecksum = calculateChecksum(payload);
+  if (checksum !== expectedChecksum) {
+    return {
+      reason: 'checksum',
+      detail: 'The final nibble must equal the modulo-16 checksum of the first 15 nibbles.',
+      expectedChecksum,
+      actualChecksum: checksum,
+      expectedErrorCode: `${payload}${expectedChecksum}`
+    };
+  }
+
+  return null;
+};
+
 const validateErrorCode = (errorCode) => {
-  if (!/^[0-9A-F]{16}$/.test(errorCode)) return false;
-  const payload = errorCode.slice(0, 15);
-  const checksum = errorCode.slice(15);
-  return calculateChecksum(payload) === checksum;
+  return explainErrorCodeFailure(errorCode) === null;
 };
 
 const generateHexCode = ({ prefix = '', errorKey, errorCodeMap, deterministicOnly = false }) => {
@@ -245,15 +276,32 @@ const main = () => {
 
       case 'validate': {
         if (args.errorCode) {
-          const ok = validateErrorCode(args.errorCode.toUpperCase());
-          console.log(ok ? 'Valid error code.' : 'Invalid error code.');
-          if (!ok) process.exit(1);
+          const failure = explainErrorCodeFailure(args.errorCode);
+          if (!failure) {
+            console.log('Valid error code.');
+            break;
+          }
+
+          console.error('Invalid error code:', JSON.stringify({
+            errorCode: args.errorCode,
+            ...failure
+          }, null, 2));
+          process.exit(1);
           break;
         }
 
         const failures = Object.entries(errorCodeMap)
-          .filter(([, code]) => !validateErrorCode(String(code).toUpperCase()))
-          .map(([key, code]) => ({ errorKey: key, errorCode: code }));
+          .map(([key, code]) => ({
+            errorKey: key,
+            errorCode: code,
+            failure: explainErrorCodeFailure(code)
+          }))
+          .filter((entry) => entry.failure)
+          .map(({ errorKey, errorCode, failure }) => ({
+            errorKey,
+            errorCode,
+            ...failure
+          }));
 
         if (failures.length > 0) {
           console.error('Invalid error codes:', JSON.stringify(failures, null, 2));
@@ -280,4 +328,3 @@ const main = () => {
 };
 
 main();
-

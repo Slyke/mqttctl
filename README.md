@@ -18,6 +18,7 @@ Run, secure, and troubleshoot Mosquitto from one local-first control plane.
 
 - [`docs/getting-started.md`](./docs/getting-started.md): quick guides for getting the stack running, choosing auth, wiring TLS, and first-use flows
 - [`docs/advanced-operations.md`](./docs/advanced-operations.md): detailed runtime, auth, broker-agent, DynSec, MQTT explorer, snapshots, and logging behavior
+- [`docs/backup-restore.md`](./docs/backup-restore.md): SQLite and Postgres backup or restore runbooks for app data and broker runtime files
 - [`docs/development.md`](./docs/development.md): contributor workflow, local dev commands, tests, and bind-mounted dev stack notes
 - [`CERTS.md`](./CERTS.md): TLS walkthrough for Mosquitto, broker-agent HTTPS, and compose-mounted cert files
 - [`spec.md`](./spec.md): current product and technical contract
