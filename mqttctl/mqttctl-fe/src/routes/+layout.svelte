@@ -5,6 +5,7 @@
   export let data: App.PageData;
 
   if (browser) {
+    document.documentElement.dataset.apiBasePath = data.apiBasePath ?? '/api';
     document.documentElement.dataset.theme = data.ui?.theme ?? 'dark';
     document.documentElement.dataset.font = data.ui?.font ?? 'ui-mono';
   }
@@ -17,4 +18,3 @@
 </svelte:head>
 
 <slot />
-

@@ -346,6 +346,13 @@ const logStartupDiagnostics = ({
       ui: {
         publicBaseUrl: runtimeConfig.config.publicBaseUrl,
         basePath: runtimeConfig.config.basePath,
+        httpApi: {
+          mode: runtimeConfig.config.httpApi.mode,
+          browserBasePath: runtimeConfig.config.httpApi.browserBasePath,
+          proxyBasePath: runtimeConfig.config.httpApi.proxy.basePath,
+          proxyUpstreamBaseUrlConfigured: Boolean(runtimeConfig.config.httpApi.proxy.upstreamBaseUrl),
+          proxyUpstreamBasePath: runtimeConfig.config.httpApi.proxy.upstreamBasePath
+        },
         uiOverrideCssPathConfigured: Boolean(runtimeConfig.uiOverrideCssPath),
         languageFilePathConfigured: Boolean(runtimeConfig.config.ui.languageFilePath)
       }

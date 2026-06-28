@@ -4,6 +4,7 @@ import { createCorrelationId } from '$server/utils/ids';
 import { AppError, toErrorBody } from '$server/logging/errors';
 import { getSourceIp } from '$server/http';
 import frontendErrorCatalog from './errors.json';
+import { handleHttpApiProxy } from '$lib/server/http-api-proxy';
 
 const frontendErrors = frontendErrorCatalog as Record<string, string>;
 const eagerSsrRelativeFetchPattern = 'Cannot call `fetch` eagerly during server-side rendering with relative URL';
@@ -89,7 +90,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   event.locals.currentUser = sessionUser ?? headerUser;
 
-  const response = await resolve(event);
+  const response = await handleHttpApiProxy({ event, resolve });
   response.headers.set('x-correlation-id', correlationId);
   return response;
 };

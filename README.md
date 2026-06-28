@@ -65,6 +65,9 @@ Then open `http://localhost:3000` and sign in with the bootstrap credentials you
 - `MQTTCTL_UI_OVERRIDE_CSS_PATH` exposes instance-specific CSS through `/instance-overrides.css`
 - `MQTTCTL_LOG_*` env vars can override the configured logging sinks at deploy time
 - `MQTTCTL_LOG_K8S_METADATA_ENABLED` or `LOG_K8S_METADATA_ENABLED`, plus `K8S_*` metadata env vars, can attach Kubernetes metadata to each log entry
+- `config.httpApi.mode` controls browser API routing:
+  - `browser` keeps the current direct browser-to-API path, defaulting to `/api`
+  - `proxy` makes the SvelteKit Node process proxy HTTP API requests from `config.httpApi.proxy.basePath` to `config.httpApi.proxy.upstreamBaseUrl`
 
 Control-plane builds generate a build label in the form `v<version>-<commit>`. The API logs it at startup, the signed-in app shell shows it in the sidebar, and broker-agent logs its own label on startup as well.
 

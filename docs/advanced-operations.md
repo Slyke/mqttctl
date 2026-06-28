@@ -20,6 +20,14 @@ This guide documents the implementation that is checked into the repo today.
   - `config.database.postgres`
   - `secrets.postgresPassword`
 
+## HTTP API Routing
+
+- `config.httpApi.mode` defaults to `browser`
+- browser mode keeps the existing browser-facing API prefix at `config.httpApi.browserBasePath`, defaulting to `/api`
+- proxy mode changes browser HTTP API calls to `config.httpApi.proxy.basePath`, such as `/api-proxy`, and the SvelteKit Node process forwards those requests to `config.httpApi.proxy.upstreamBaseUrl`
+- proxy mode requires `config.httpApi.proxy.upstreamBaseUrl`
+- `config.httpApi.proxy.upstreamBasePath` defaults to `/api`, so `/api-proxy/dynsec/clients` forwards to `{upstreamBaseUrl}/api/dynsec/clients`
+
 ## Control Plane vs Broker-Agent Boundary
 
 - If `config.broker.agent.baseUrl` is unset, the control plane:

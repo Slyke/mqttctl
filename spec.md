@@ -190,6 +190,9 @@ Both file paths are supplied via env vars. Both files are read-only to the appli
 - Put secrets, passwords, client secrets, signing keys, and secret material in the secrets file.
 - Put mutable non-secret product settings in the DB wherever possible.
 - Use env vars for startup path selection, deploy-time logging overrides, optional Kubernetes log metadata hints, and deployment-local file hooks such as the custom CSS override path.
+- `config.httpApi.mode` selects how browser HTTP API calls are routed:
+  - `browser`: browser calls use `config.httpApi.browserBasePath`, defaulting to `/api`
+  - `proxy`: browser calls use `config.httpApi.proxy.basePath`, and the SvelteKit Node process proxies those HTTP requests to `config.httpApi.proxy.upstreamBaseUrl` plus `config.httpApi.proxy.upstreamBasePath`
 
 ## Database Support
 
@@ -488,6 +491,8 @@ V1 should ship examples for:
 ## HTTP Surface
 
 The current repository exposes these UI and API routes:
+
+By default these routes remain under `/api`. When HTTP API proxy mode is enabled, the browser-facing API prefix may be changed with `config.httpApi.proxy.basePath` while the upstream API prefix remains independently configured with `config.httpApi.proxy.upstreamBasePath`.
 
 ### Session And Auth Routes
 

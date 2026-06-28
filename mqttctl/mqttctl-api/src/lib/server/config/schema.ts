@@ -9,10 +9,21 @@ const logLevelEnum = z.enum(['debug', 'info', 'warn', 'error']);
 const logFormatEnum = z.enum(['text', 'json']);
 const logLevelListSchema = z.array(logLevelEnum).min(1);
 const oidcTokenEndpointAuthMethodEnum = z.enum(['client_secret_post', 'client_secret_basic']);
+const httpApiModeEnum = z.enum(['browser', 'proxy']);
 const managedBrokerKeyFilePathSchema = z.record(
   z.enum(managedBrokerKeyFileIds),
   z.string().min(1).nullable()
 );
+const httpApiBasePathSchema = z.string().min(1).refine((value) => {
+  const trimmed = value.trim();
+  const pathPrefix = trimmed.replace(/^\/+|\/+$/g, '');
+  return (
+    pathPrefix.length > 0
+    && !trimmed.includes('?')
+    && !trimmed.includes('#')
+    && !/^[a-z][a-z0-9+.-]*:/i.test(trimmed)
+  );
+}, 'HTTP API base paths must be path prefixes, not absolute URLs.');
 
 const authEventLoggingSchema = z.object({
   level: logLevelEnum.default('info'),
@@ -127,6 +138,27 @@ export const configSchema = z.object({
   appName: z.string().default('mqttctl'),
   publicBaseUrl: z.string().url(),
   basePath: z.string().default(''),
+  httpApi: z.object({
+    mode: httpApiModeEnum.default('browser'),
+    browserBasePath: httpApiBasePathSchema.default('/api'),
+    proxy: z.object({
+      basePath: httpApiBasePathSchema.default('/api-proxy'),
+      upstreamBaseUrl: z.string().url().nullable().default(null),
+      upstreamBasePath: httpApiBasePathSchema.default('/api')
+    }).default({
+      basePath: '/api-proxy',
+      upstreamBaseUrl: null,
+      upstreamBasePath: '/api'
+    })
+  }).default({
+    mode: 'browser',
+    browserBasePath: '/api',
+    proxy: {
+      basePath: '/api-proxy',
+      upstreamBaseUrl: null,
+      upstreamBasePath: '/api'
+    }
+  }),
   ui: z.object({
     defaultTheme: z.enum(['dark', 'light']).default('dark'),
     defaultFont: z.string().default('ui-mono'),

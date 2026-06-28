@@ -17,6 +17,7 @@ declare global {
     }
 
     interface PageData {
+      apiBasePath?: string;
       currentUser?: AuthenticatedUser | null;
       correlationId?: string;
       ui?: {

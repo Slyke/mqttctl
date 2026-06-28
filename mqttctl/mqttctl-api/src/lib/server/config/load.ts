@@ -130,6 +130,18 @@ export const loadRuntimeConfig = async ({ correlationId = null }: { correlationI
     });
   }
 
+  if (
+    configResult.data.httpApi.mode === 'proxy'
+    && !configResult.data.httpApi.proxy.upstreamBaseUrl
+  ) {
+    throw createAppError({
+      caller: 'config::load',
+      reason: 'HTTP API proxy mode requires config.httpApi.proxy.upstreamBaseUrl.',
+      errorKey: 'CONFIG_VALIDATION_FAILED',
+      correlationId
+    });
+  }
+
   return {
     config: configResult.data,
     secrets: secretsResult.data,

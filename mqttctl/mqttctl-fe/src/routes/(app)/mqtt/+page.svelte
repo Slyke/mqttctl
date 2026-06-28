@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
-  import { apiRequest } from '$lib/stores/api';
+  import { apiRequest, buildApiUrl } from '$lib/stores/api';
   import { capitalizeLabel } from '$lib/strings/display';
   import type {
     MqttExplorerState,
@@ -612,7 +612,7 @@
     eventSource?.close();
     eventSource = null;
 
-    void fetch('/api/mqtt/disconnect', {
+    void fetch(buildApiUrl({ url: '/api/mqtt/disconnect' }), {
       method: 'POST',
       credentials: 'same-origin',
       keepalive: true,
@@ -627,7 +627,7 @@
 
   const openLiveStream = () => {
     eventSource?.close();
-    eventSource = new EventSource('/api/mqtt/events');
+    eventSource = new EventSource(buildApiUrl({ url: '/api/mqtt/events' }));
 
     eventSource.onmessage = (event) => {
       const payload = JSON.parse(event.data) as { explorer: MqttExplorerState };

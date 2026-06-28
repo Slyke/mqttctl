@@ -1,12 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { apiRequest } from '$lib/stores/api';
+  import { apiRequest, buildApiUrl } from '$lib/stores/api';
   import type { ManagedBrokerKeyFileId, ManagedBrokerKeyFileStatus } from '$lib/types';
 
   export let data: {
     canManageBroker: boolean;
     configText: string;
     loadError: string | null;
+    apiBasePath: string;
   };
 
   let configText = data.configText;
@@ -200,7 +201,7 @@
 
           {#if file.configured && file.exists}
             <div class="form-actions">
-              <a class="button-start" href={`/api/config/key-files/${file.fileId}`}>Download {file.fileName ?? keyFileLabels[file.fileId]}</a>
+              <a class="button-start" href={buildApiUrl({ apiBasePath: data.apiBasePath, url: `/api/config/key-files/${file.fileId}` })}>Download {file.fileName ?? keyFileLabels[file.fileId]}</a>
             </div>
           {/if}
         </section>
