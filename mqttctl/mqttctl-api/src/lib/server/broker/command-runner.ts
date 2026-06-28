@@ -52,7 +52,7 @@ export const runCommand = async ({
       if (settled) return;
       settled = true;
       clearTimeout(timeout);
-      reject(createAppError({
+      return reject(createAppError({
         caller: 'broker::runCommand',
         reason: `Failed spawning ${executable}.`,
         errorKey: 'BROKER_COMMAND_FAILED',
@@ -67,7 +67,7 @@ export const runCommand = async ({
       settled = true;
       clearTimeout(timeout);
 
-      resolve({
+      return resolve({
         executable,
         args: resultArgs,
         exitCode,

@@ -646,7 +646,10 @@
         return;
       }
 
-      void disconnectBrowserSession();
+      void disconnectBrowserSession().catch((caught) => {
+        actionError = caught instanceof Error ? caught.message : 'Browser live channel dropped.';
+        actionMessage = 'Browser live channel dropped. The page state was reset.';
+      });
     };
   };
 
@@ -680,7 +683,10 @@
     browserReady = true;
     window.addEventListener('pagehide', handlePageHide);
     openLiveStream();
-    void refreshExplorerState();
+    void refreshExplorerState().catch((caught) => {
+      actionError = caught instanceof Error ? caught.message : 'Failed to refresh MQTT explorer state.';
+      actionMessage = '';
+    });
 
     return () => {
       window.removeEventListener('pagehide', handlePageHide);

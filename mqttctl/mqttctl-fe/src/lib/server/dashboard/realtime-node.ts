@@ -291,7 +291,12 @@ export const attachDashboardWebSocketServer = ({
       }
     };
 
-    void initializeConnection();
+    void initializeConnection().catch((error) => {
+      console.error('Dashboard websocket connection initialization failed.', {
+        error
+      });
+      ws.close(1011, 'Dashboard snapshot unavailable.');
+    });
 
     const closeClient = () => {
       clients.delete(ws);
@@ -358,6 +363,19 @@ export const attachDashboardWebSocketServer = ({
       request,
       socket,
       head
+    }).catch((error) => {
+      console.error('Dashboard websocket upgrade failed.', {
+        error
+      });
+
+      if (socket.destroyed) return;
+
+      rejectUpgrade({
+        socket,
+        statusCode: 500,
+        statusText: 'Internal Server Error',
+        reason: 'Dashboard websocket upgrade failed.'
+      });
     });
   });
 };

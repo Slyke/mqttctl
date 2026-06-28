@@ -53,7 +53,11 @@ const getOidcCallbackUrl = ({ runtimeConfig }: { runtimeConfig: LoadedRuntimeCon
   return `${runtimeConfig.config.publicBaseUrl}${runtimeConfig.config.basePath}/auth/callback`;
 };
 
-const sleep = async ({ ms }: { ms: number }) => await new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = async ({ ms }: { ms: number }) => await new Promise<void>((resolve) => {
+  setTimeout(() => {
+    return resolve();
+  }, ms);
+});
 
 const describeAppErrorForLog = ({ error }: { error: unknown }) => {
   if (!(error instanceof AppError)) {

@@ -278,7 +278,7 @@ export class BrokerAgentClient {
         });
         response.on('end', () => {
           const text = Buffer.concat(chunks).toString('utf8');
-          resolve({
+          return resolve({
             ok: (response.statusCode ?? 500) >= 200 && (response.statusCode ?? 500) < 300,
             status: response.statusCode ?? 500,
             payload: text
@@ -294,7 +294,9 @@ export class BrokerAgentClient {
         });
       });
 
-      request.on('error', reject);
+      request.on('error', (error) => {
+        return reject(error);
+      });
       request.setTimeout(this.timeoutMs(), () => {
         request.destroy(new Error(`Request timed out after ${this.timeoutMs()}ms.`));
       });

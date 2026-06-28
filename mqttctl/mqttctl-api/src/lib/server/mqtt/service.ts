@@ -118,7 +118,9 @@ const buildPreview = ({ value }: { value: string }) => value.length > 160 ? `${v
 
 const wrapClientEnd = async ({ client }: { client: MqttClient }) => {
   await new Promise<void>((resolve) => {
-    client.end(true, {}, () => resolve());
+    client.end(true, {}, () => {
+      return resolve();
+    });
   });
 };
 
@@ -134,11 +136,10 @@ const wrapSubscribe = async ({
   await new Promise<void>((resolve, reject) => {
     client.subscribe(filter, { qos }, (error) => {
       if (error) {
-        reject(error);
-        return;
+        return reject(error);
       }
 
-      resolve();
+      return resolve();
     });
   });
 };
@@ -153,11 +154,10 @@ const wrapUnsubscribe = async ({
   await new Promise<void>((resolve, reject) => {
     client.unsubscribe(filter, (error) => {
       if (error) {
-        reject(error);
-        return;
+        return reject(error);
       }
 
-      resolve();
+      return resolve();
     });
   });
 };
@@ -178,11 +178,10 @@ const wrapPublish = async ({
   await new Promise<void>((resolve, reject) => {
     client.publish(topic, payload, { qos, retain }, (error) => {
       if (error) {
-        reject(error);
-        return;
+        return reject(error);
       }
 
-      resolve();
+      return resolve();
     });
   });
 };
@@ -518,7 +517,7 @@ export class MqttExplorerService {
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         cleanup();
-        reject(createAppError({
+        return reject(createAppError({
           caller: 'mqtt::connect',
           reason: 'Timed out while waiting for the MQTT broker connection.',
           errorKey: 'MQTT_CONNECTION_FAILED',
@@ -529,12 +528,12 @@ export class MqttExplorerService {
 
       const onConnect = () => {
         cleanup();
-        resolve();
+        return resolve();
       };
 
       const onError = (error: unknown) => {
         cleanup();
-        reject(createAppError({
+        return reject(createAppError({
           caller: 'mqtt::connect',
           reason: error instanceof Error ? error.message : 'MQTT broker connection failed.',
           errorKey: 'MQTT_CONNECTION_FAILED',
@@ -636,6 +635,14 @@ export class MqttExplorerService {
           ) {
             this.sessions.delete(sessionKey);
           }
+        }).catch((error) => {
+          this.logger.warn({
+            caller: 'mqtt::disconnectAfterLiveChannelClosed',
+            message: 'Failed to clean up MQTT session after the browser live channel closed.',
+            correlationId,
+            errorKey: 'MQTT_OPERATION_FAILED',
+            rootCause: error
+          });
         });
       }, sessionCloseGracePeriodMs);
     };

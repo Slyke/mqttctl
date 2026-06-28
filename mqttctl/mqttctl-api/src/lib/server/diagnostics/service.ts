@@ -62,18 +62,18 @@ export class DiagnosticsService {
     return await new Promise<boolean>((resolve) => {
       const timeout = setTimeout(() => {
         socket.destroy();
-        resolve(false);
+        return resolve(false);
       }, 2_000);
 
       socket.once(successEvent, () => {
         clearTimeout(timeout);
         socket.end();
-        resolve(true);
+        return resolve(true);
       });
 
       socket.once('error', () => {
         clearTimeout(timeout);
-        resolve(false);
+        return resolve(false);
       });
     });
   }
