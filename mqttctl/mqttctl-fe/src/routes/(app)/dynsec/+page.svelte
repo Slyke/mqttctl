@@ -2,6 +2,7 @@
   import { onDestroy } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
+  import { copyTableAsJson, type TableJsonPayload } from '$lib/actions/copy-table-json';
   import defaultDynsecLanguage from '$lib/i18n/dynsec.en.json';
   import { apiRequest } from '$lib/stores/api';
   import { interpolate, type InterpolateValues } from '$lib/strings/interpolate';
@@ -116,6 +117,11 @@
   let selectedRoleEntry = data.selectedRole
     ? data.state.roles.find((role) => role.rolename === data.selectedRole) ?? null
     : null;
+  let clientsTableJson: TableJsonPayload;
+  let effectivePermissionsTableJson: TableJsonPayload;
+  let rolesTableJson: TableJsonPayload;
+  let selectedRoleAclsTableJson: TableJsonPayload;
+  let groupsTableJson: TableJsonPayload;
 
   $: if (page.url.search !== appliedPageSearch) {
     appliedPageSearch = page.url.search;
@@ -148,6 +154,13 @@
     showAssignmentPriorities ? `${rolename}:${priority}` : rolename;
   const formatAclEffect = ({ allow }: { allow: boolean }) => allow ? t('dynsec-common-allow') : t('dynsec-common-deny');
   const formatClientState = ({ disabled }: { disabled: boolean }) => disabled ? t('dynsec-common-disabled') : t('dynsec-common-enabled');
+  const formatExportAcl = (acl: { acltype: DynsecAclType; topic: string; allow: boolean; priority: number }) => ({
+    acl: acl.acltype,
+    label: formatAclType(acl.acltype),
+    topic: acl.topic,
+    effect: acl.allow ? 'allow' : 'deny',
+    priority: acl.priority
+  });
   const normalizeEntityName = ({ value }: { value: string }) => value.trim();
   const groupNameExists = ({ groupname, except = null }: { groupname: string; except?: string | null }) =>
     data.state.groups.some((group) => group.groupname === groupname && group.groupname !== except);
@@ -174,6 +187,64 @@
     if (normalized.length === 1) return formatAclTypeOptionLabel(normalized[0]!);
 
     return normalized.map((acltype) => aclTypeShortLabels[acltype]).join(', ');
+  };
+
+  $: clientsTableJson = {
+    section: 'DynSec',
+    table: t('dynsec-clients_section-heading'),
+    columns: ['client', 'clientId', 'groups', 'roles', 'state'],
+    content: data.state.clients.map((client) => ({
+      client: client.username,
+      clientId: client.clientid,
+      groups: client.groups.map((group) => ({
+        group: group.groupname,
+        priority: group.priority
+      })),
+      roles: client.roles.map((role) => ({
+        role: role.rolename,
+        priority: role.priority
+      })),
+      state: client.disabled ? 'disabled' : 'enabled'
+    }))
+  };
+  $: effectivePermissionsTableJson = {
+    section: 'DynSec',
+    table: t('dynsec-effectivePermissions_toggle-label'),
+    columns: ['acl', 'topic', 'effect', 'priority'],
+    content: (data.effectivePermissions?.mergedAcls ?? []).map(formatExportAcl)
+  };
+  $: rolesTableJson = {
+    section: 'DynSec',
+    table: t('dynsec-roles_section-heading'),
+    columns: ['role', 'acls'],
+    content: data.state.roles.map((role) => ({
+      role: role.rolename,
+      acls: role.acls.map(formatExportAcl)
+    }))
+  };
+  $: selectedRoleAclsTableJson = {
+    section: 'DynSec',
+    table: selectedRoleEntry
+      ? t('dynsec-roleAcls_section-heading', { rolename: selectedRoleEntry.rolename })
+      : t('dynsec-roleAcls_assigned-heading'),
+    columns: ['acl', 'topic', 'effect', 'priority'],
+    content: (selectedRoleEntry?.acls ?? []).map(formatExportAcl)
+  };
+  $: groupsTableJson = {
+    section: 'DynSec',
+    table: t('dynsec-groups_section-heading'),
+    columns: ['group', 'clients', 'roles'],
+    content: data.state.groups.map((group) => ({
+      group: group.groupname,
+      clients: group.clients.map((client) => ({
+        client: client.username,
+        priority: client.priority
+      })),
+      roles: group.roles.map((role) => ({
+        role: role.rolename,
+        priority: role.priority
+      }))
+    }))
   };
   const toggleAclType = ({
     acltype,
@@ -970,7 +1041,7 @@
   <div class="stack inspection-cluster">
     <article class="panel stack">
       <h2>{t('dynsec-clients_section-heading')}</h2>
-      <div class="table-wrap">
+      <div class="table-wrap" use:copyTableAsJson={clientsTableJson}>
         <table>
           <thead>
             <tr>
@@ -1145,7 +1216,7 @@
                 <div class="badge tone-warning">{warning}</div>
               {/each}
             {/if}
-            <div class="table-wrap">
+            <div class="table-wrap" use:copyTableAsJson={effectivePermissionsTableJson}>
               <table>
                 <thead>
                   <tr>
@@ -1178,7 +1249,7 @@
   <div class="stack inspection-cluster">
     <article class="panel stack">
       <h2>{t('dynsec-roles_section-heading')}</h2>
-      <div class="table-wrap">
+      <div class="table-wrap" use:copyTableAsJson={rolesTableJson}>
         <table>
           <thead>
             <tr>
@@ -1292,7 +1363,7 @@
         <div class="stack-tight">
           <h3>{t('dynsec-roleAcls_assigned-heading')}</h3>
           {#if selectedRoleEntry.acls.length}
-            <div class="table-wrap compact-table-wrap">
+            <div class="table-wrap compact-table-wrap" use:copyTableAsJson={selectedRoleAclsTableJson}>
               <table class="compact-table">
                 <thead>
                   <tr>
@@ -1335,7 +1406,7 @@
   <div class="stack inspection-cluster">
     <article class="panel stack">
       <h2>{t('dynsec-groups_section-heading')}</h2>
-      <div class="table-wrap">
+      <div class="table-wrap" use:copyTableAsJson={groupsTableJson}>
         <table>
           <thead>
             <tr>
@@ -1507,22 +1578,36 @@
   }
 
   .badge-action {
-    border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+    appearance: none;
+    min-height: 1.45rem;
+    border: 1px solid var(--color-mid-border);
     border-radius: 999px;
-    background: color-mix(in srgb, var(--color-panel-strong) 88%, var(--color-mid-soft));
-    color: var(--color-text);
+    background: var(--color-mid-fill);
+    color: var(--color-mid-ink);
     cursor: pointer;
     font: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
     line-height: 1;
     padding: 0.32rem 0.65rem;
-    transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+    box-shadow: inset 0 0 0 1px var(--color-tone-glint);
+    transition:
+      background-color var(--transition),
+      border-color var(--transition),
+      box-shadow var(--transition),
+      transform var(--transition);
   }
 
-  .badge-action:hover,
-  .badge-action:focus-visible {
+  .badge-action:hover {
     border-color: var(--color-mid);
-    background: color-mix(in srgb, var(--color-mid-soft) 75%, var(--color-panel-strong));
+    background: var(--color-mid-soft);
     transform: translateY(-1px);
+  }
+
+  .badge-action:focus-visible {
+    outline: none;
+    border-color: var(--color-warning);
+    box-shadow: var(--shadow-focus);
   }
 
   .selected-row {
@@ -1593,7 +1678,18 @@
     position: relative;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    background: var(--color-panel-strong);
+    background: var(--color-control-bg);
+    box-shadow: inset 0 0 0 1px var(--color-tone-glint);
+  }
+
+  .acl-multi-select:hover {
+    border-color: var(--color-start);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .acl-multi-select:focus-within {
+    border-color: var(--color-warning);
+    box-shadow: var(--shadow-focus);
   }
 
   .acl-multi-select summary {
@@ -1603,6 +1699,10 @@
     align-items: center;
     min-height: var(--dynsec-control-min-height);
     padding: var(--dynsec-control-padding-block) var(--dynsec-control-padding-inline);
+  }
+
+  .acl-multi-select summary:focus-visible {
+    outline: none;
   }
 
   .acl-multi-select[open] summary {
@@ -1625,7 +1725,7 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background: var(--color-panel-strong);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-border) 30%, transparent);
+    box-shadow: var(--shadow-panel);
   }
 
   .acl-multi-select-actions {
@@ -1636,21 +1736,12 @@
 
   .acl-multi-select-action-button {
     width: 100%;
-    min-height: auto;
-    padding: 0.35rem 0.65rem;
-    border-color: var(--color-border-strong);
-    background: var(--color-panel-strong);
-    box-shadow: none;
-  }
-
-  .acl-multi-select-action-button:hover {
-    border-color: var(--color-start);
-    box-shadow: var(--shadow-hover);
+    min-height: 2.15rem;
+    padding: 0.42rem 0.65rem 0.36rem;
   }
 
   .acl-multi-select-actions:hover .acl-multi-select-action-button:not(:hover) {
-    border-color: var(--color-border-strong);
-    box-shadow: none;
+    border-color: var(--color-border);
   }
 
   .acl-multi-select-option {

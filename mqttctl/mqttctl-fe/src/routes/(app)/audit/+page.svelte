@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { copyTableAsJson, type TableJsonPayload } from '$lib/actions/copy-table-json';
   import { formatDisplayCode } from '$lib/strings/display';
 
   export let data: {
@@ -24,6 +25,27 @@
   };
 
   const limitLabel = ({ value }: { value: string }) => value === 'all' ? 'All' : value;
+  let auditTableJson: TableJsonPayload;
+
+  $: auditTableJson = {
+    section: 'Audit',
+    table: 'Entries',
+    pages: data.filters.indexes,
+    columns: ['time', 'actor', 'auth', 'ip', 'action', 'target', 'result', 'correlation'],
+    content: data.entries.map((entry) => ({
+      time: entry.timestamp,
+      actor: entry.actorUsername,
+      auth: entry.authMode,
+      ip: entry.sourceIp,
+      action: entry.action,
+      target: {
+        type: entry.targetType,
+        id: entry.targetId
+      },
+      result: entry.success ? 'success' : 'failed',
+      correlation: entry.correlationId
+    }))
+  };
 </script>
 
 <section class="stack">
@@ -54,7 +76,7 @@
   </div>
 
   <article class="panel">
-    <div class="table-wrap">
+    <div class="table-wrap" use:copyTableAsJson={auditTableJson}>
       <table>
         <thead>
           <tr>

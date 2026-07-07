@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { invalidateAll } from '$app/navigation';
+  import { copyTableAsJson, type TableJsonPayload } from '$lib/actions/copy-table-json';
   import type { SnapshotExport } from '$lib/types';
   import { apiRequest } from '$lib/stores/api';
   import { formatDisplayCode } from '$lib/strings/display';
@@ -23,6 +24,20 @@
   let importJson = '';
   let message = '';
   let error = '';
+  let historyTableJson: TableJsonPayload;
+
+  $: historyTableJson = {
+    section: 'Snapshots',
+    table: 'History',
+    columns: ['id', 'kind', 'created', 'actor', 'note'],
+    content: data.snapshots.map((snapshot) => ({
+      id: snapshot.id,
+      kind: snapshot.kind,
+      created: snapshot.createdAt,
+      actor: snapshot.actorUsername,
+      note: snapshot.note
+    }))
+  };
 
   const clearSnapshotDownload = () => {
     if (snapshotDownloadUrl) {
@@ -170,7 +185,7 @@
 
   <article class="panel">
     <h2>History</h2>
-    <div class="table-wrap">
+    <div class="table-wrap" use:copyTableAsJson={historyTableJson}>
       <table>
         <thead>
           <tr>

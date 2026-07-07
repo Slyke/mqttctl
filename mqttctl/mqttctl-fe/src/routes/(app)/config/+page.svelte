@@ -247,9 +247,10 @@
 
   .key-file-card {
     padding: var(--space-3);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-lg);
-    background: color-mix(in srgb, var(--panel) 85%, transparent);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-elevated);
+    box-shadow: inset 0 0 0 1px var(--color-tone-glint);
   }
 
   .key-file-card-header {

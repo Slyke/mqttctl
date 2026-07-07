@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import { copyTableAsJson, type TableJsonPayload } from '$lib/actions/copy-table-json';
   import { apiRequest } from '$lib/stores/api';
   import { formatDisplayCode } from '$lib/strings/display';
 
@@ -22,8 +23,22 @@
   let createRole = 'viewer';
   let createPassword = '';
   let passwordResetUserId: string | null = null;
+  let usersTableJson: TableJsonPayload;
 
   const isLocalUser = (user: typeof data.users[number]) => user.authSource === 'local';
+
+  $: usersTableJson = {
+    section: 'App Users',
+    table: 'Users',
+    columns: ['user', 'auth', 'role', 'email', 'status'],
+    content: data.users.map((user) => ({
+      user: user.username,
+      auth: user.authSource,
+      role: user.role,
+      email: user.email,
+      status: user.disabled ? 'disabled' : 'enabled'
+    }))
+  };
 
   const togglePasswordReset = (userId: string) => {
     passwordResetUserId = passwordResetUserId === userId ? null : userId;
@@ -150,7 +165,7 @@
 
   <article class="panel stack">
     <h2>Users</h2>
-    <div class="table-wrap">
+    <div class="table-wrap" use:copyTableAsJson={usersTableJson}>
       <table>
         <thead>
           <tr>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { copyTableAsJson, type TableJsonPayload } from '$lib/actions/copy-table-json';
   import { formatDisplayCode } from '$lib/strings/display';
   import type { DiagnosticsSummary, OperationStatus } from '$lib/types';
 
@@ -140,6 +141,7 @@
   let keepDashboardSocketAlive = true;
   let currentBrokerStatus = brokerStatus({ state: backendConnectionState });
   let currentDynsecStatus = dynsecStatus({ state: backendConnectionState });
+  let recentWritesTableJson: TableJsonPayload;
 
   const clearReconnectTimer = () => {
     if (reconnectTimer === null) return;
@@ -224,6 +226,17 @@
 
   $: currentBrokerStatus = brokerStatus({ state: backendConnectionState });
   $: currentDynsecStatus = dynsecStatus({ state: backendConnectionState });
+  $: recentWritesTableJson = {
+    section: 'Dashboard',
+    table: 'Recent Writes',
+    columns: ['time', 'action', 'actor', 'result'],
+    content: data.auditEntries.map((entry) => ({
+      time: entry.timestamp,
+      action: entry.action,
+      actor: entry.actorUsername,
+      result: entry.success ? 'success' : 'failed'
+    }))
+  };
 </script>
 
 <section class="stack dashboard-page">
@@ -332,7 +345,7 @@
       <h2>Recent Writes</h2>
       {#if data.canViewAudit}
         {#if data.auditEntries.length}
-          <div class="table-wrap">
+          <div class="table-wrap" use:copyTableAsJson={recentWritesTableJson}>
             <table class="dashboard-recent-writes">
               <thead>
                 <tr>

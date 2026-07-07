@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { apiRequest, buildApiUrl } from '$lib/stores/api';
+  import { copyTableAsJson, type TableJsonPayload } from '$lib/actions/copy-table-json';
   import { capitalizeLabel } from '$lib/strings/display';
   import type {
     MqttExplorerState,
@@ -166,6 +167,10 @@
   let connectLabel = 'Connect';
   let disconnectLabel = 'Disconnected';
   let currentSelectedMessage: MqttLatestMessage | null = null;
+  let dynsecClientsTableJson: TableJsonPayload;
+  let allowedFiltersTableJson: TableJsonPayload;
+  let subscriptionsTableJson: TableJsonPayload;
+  let latestTopicsTableJson: TableJsonPayload;
 
   const formatClientId = ({
     clientId,
@@ -245,6 +250,56 @@
       ? 'Disconnected'
       : 'Disconnect';
   $: currentSelectedMessage = explorer.messages.find((entry) => entry.topic === selectedTopic) ?? null;
+  $: dynsecClientsTableJson = {
+    section: 'MQTT Explorer',
+    table: 'DynSec Clients',
+    columns: ['username', 'clientId', 'status'],
+    content: visibleDynsecClients.map((client) => ({
+      username: client.username,
+      textName: client.textName,
+      clientId: {
+        value: client.clientId ?? data.generatedClientId,
+        random: client.clientIdIsRandom
+      },
+      status: client.disabled ? 'disabled' : 'enabled'
+    }))
+  };
+  $: allowedFiltersTableJson = {
+    section: 'MQTT Explorer',
+    table: 'Allowed Filters',
+    columns: ['filter', 'acl', 'priority'],
+    content: selectedDynsecSubscriptionAccess.map((entry) => ({
+      filter: entry.filter,
+      acl: entry.acltype,
+      label: formatSubscriptionAclType({ acltype: entry.acltype }),
+      priority: entry.priority
+    }))
+  };
+  $: subscriptionsTableJson = {
+    section: 'MQTT Explorer',
+    table: 'Subscriptions',
+    columns: ['filter', 'qos', 'matches'],
+    content: explorer.subscriptions.map((subscription) => ({
+      filter: subscription.filter,
+      qos: subscription.qos,
+      matches: subscription.matchedMessageCount
+    }))
+  };
+  $: latestTopicsTableJson = {
+    section: 'MQTT Explorer',
+    table: 'Latest Topics',
+    columns: ['topic', 'payload', 'payloadFormat', 'qos', 'retain', 'received', 'byteLength'],
+    content: explorer.messages.map((message) => ({
+      topic: message.topic,
+      payload: message.payload,
+      preview: message.preview,
+      payloadFormat: message.payloadFormat,
+      qos: message.qos,
+      retain: message.retain,
+      received: message.receivedAt,
+      byteLength: message.byteLength
+    }))
+  };
 
   $: if (browserReady) {
     localStorage.setItem(publishDraftStorageKey, JSON.stringify({
@@ -798,7 +853,7 @@
       {#if credentialMode === 'dynsec_client'}
         <div class="stack mqtt-client-picker">
           {#if !isConnected}
-            <div class="table-wrap mqtt-client-table-wrap">
+            <div class="table-wrap mqtt-client-table-wrap" use:copyTableAsJson={dynsecClientsTableJson}>
               <table class="mqtt-client-table">
                 <thead>
                   <tr>
@@ -1077,7 +1132,7 @@
               {/if}
 
               {#if selectedDynsecSubscriptionAccess.length}
-                <div class="table-wrap">
+                <div class="table-wrap" use:copyTableAsJson={allowedFiltersTableJson}>
                   <table>
                     <thead>
                       <tr>
@@ -1131,7 +1186,7 @@
         </div>
 
         {#if explorer.subscriptions.length}
-          <div class="table-wrap">
+          <div class="table-wrap" use:copyTableAsJson={subscriptionsTableJson}>
             <table>
               <thead>
                 <tr>
@@ -1239,7 +1294,7 @@
             {/if}
 
             {#if explorer.messages.length}
-              <div class="table-wrap mqtt-topic-table-wrap">
+              <div class="table-wrap mqtt-topic-table-wrap" use:copyTableAsJson={latestTopicsTableJson}>
                 <table class="mqtt-topics-table">
                   <thead>
                     <tr>
@@ -1400,14 +1455,14 @@
 
   .mqtt-connection-action {
     min-width: 11rem;
-    border-width: 2px;
+    border-width: 1px 1px 0.28rem;
     font-weight: 700;
     letter-spacing: 0.04em;
   }
 
   .mqtt-connection-action-live {
     box-shadow:
-      var(--shadow-panel),
+      var(--shadow-control-hover),
       0 0 0 1px currentColor;
   }
 
@@ -1494,6 +1549,11 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background: var(--color-bg-elevated);
+    box-shadow: inset 0 0 0 1px var(--color-tone-glint);
+  }
+
+  .mqtt-access-details:hover {
+    border-color: var(--color-start-border);
   }
 
   .mqtt-access-details summary {
@@ -1502,6 +1562,15 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+
+  .mqtt-access-details summary:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+
+  .mqtt-access-details summary::-webkit-details-marker {
+    display: none;
   }
 
   .mqtt-access-details[open] summary {
@@ -1554,20 +1623,26 @@
     justify-content: space-between;
     gap: var(--space-3);
     width: 100%;
-    padding: var(--space-3);
-    border: 1px solid var(--color-border);
+    padding: var(--space-3) var(--space-3) calc(var(--space-3) - 0.08rem);
+    border: solid var(--color-border);
+    border-width: 1px 1px 0.22rem;
     border-radius: var(--radius-md);
-    background: var(--color-bg-elevated);
+    background: var(--color-control-bg);
     color: var(--color-text);
     font: inherit;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+    box-shadow: var(--shadow-control-rest);
     cursor: pointer;
   }
 
   .mqtt-section-toggle:hover {
     border-color: var(--color-start-border);
+    background: var(--color-start-soft);
+    box-shadow:
+      var(--shadow-control-hover),
+      var(--shadow-hover);
   }
 
   .mqtt-section-toggle-indicator {
@@ -1636,11 +1711,13 @@
   }
 
   .mqtt-message-cell-button {
+    appearance: none;
     display: -webkit-box;
     width: 100%;
     min-height: 4.2rem;
     padding: 0 0.2rem 0 0.45rem;
     border: 0;
+    border-radius: var(--radius-sm);
     background: transparent;
     color: inherit;
     font: inherit;
@@ -1648,14 +1725,21 @@
     text-align: left;
     word-break: break-word;
     overflow: hidden;
+    box-shadow: none;
     cursor: pointer;
+    transform: none;
     line-clamp: 3;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
   }
 
   .mqtt-message-cell-button:hover {
-    color: var(--color-start-text);
+    color: var(--color-start-ink);
+  }
+
+  .mqtt-message-cell-button:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--color-warning);
   }
 
   .mqtt-received-cell {
@@ -1672,8 +1756,8 @@
     padding: var(--space-4);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    background: var(--color-bg-elevated);
-    color: var(--color-text);
+    background: var(--color-pre-bg);
+    color: var(--color-pre-text);
     white-space: pre-wrap;
     word-break: break-word;
   }
