@@ -4,6 +4,19 @@ Run, secure, and troubleshoot Mosquitto from one local-first control plane.
 
 `mqttctl` gives you a browser UI for DynSec, raw broker config, audit history, snapshots, and live MQTT debugging, without assuming shell access to the broker host.
 
+## Screenshots
+
+<p>
+  <a href="./images/1_dashboard.png"><img src="./images/1_dashboard.png" alt="mqttctl dashboard" width="49%"></a>
+  <a href="./images/4_dynsec_clients.png"><img src="./images/4_dynsec_clients.png" alt="DynSec client management" width="49%"></a>
+</p>
+<p>
+  <a href="./images/11_mqtt_connected.png"><img src="./images/11_mqtt_connected.png" alt="MQTT explorer connected session" width="49%"></a>
+  <a href="./images/13_mqtt_config.png"><img src="./images/13_mqtt_config.png" alt="MQTT config editor" width="49%"></a>
+</p>
+
+Full gallery: [Dashboard](./images/1_dashboard.png), [App Users](./images/2_app_users.png), [DynSec Overview](./images/3_dynsec_top.png), [DynSec Clients](./images/4_dynsec_clients.png), [Client Assignments](./images/5_dynsec_client_assignments.png), [Effective Permissions](./images/6_dynsec_effective_permissions.png), [DynSec Roles](./images/7_dynsec_roles.png), [ACLs and Groups](./images/8_dynsec_acls_groups.png), [ACL Options](./images/9_dynsec_acl_options.png), [MQTT Connection](./images/10_mqtt_connection_options.png), [MQTT Connected Session](./images/11_mqtt_connected.png), [MQTT Subscriptions](./images/12_mqtt_subscriptions.png), [MQTT Config](./images/13_mqtt_config.png), [Audit Log](./images/14_audit.png), [Snapshots](./images/15_snapshots.png).
+
 ## What The App Does Today
 
 - Dashboard: live diagnostics, transport security badges, DynSec bootstrap status, counts, and recent audit activity
@@ -144,28 +157,41 @@ Default local endpoints:
 Broker-agent image:
 
 ```bash
+SHA=$(git rev-parse --short=12 HEAD)
+VERSION=v0.0.X
+
 docker build -t mqttctl-broker-agent:build -f ./dockerfiles/broker-agent.Dockerfile .
-docker tag mqttctl-broker-agent:build USERNAME/mqttctl-broker-agent:latest
-docker tag mqttctl-broker-agent:build USERNAME/mqttctl-broker-agent:v0.0.X
-docker push USERNAME/mqttctl-broker-agent:latest
-docker push USERNAME/mqttctl-broker-agent:v0.0.X
+
+for TAG in latest "$VERSION" "$VERSION-$SHA"; do
+  docker tag mqttctl-broker-agent:build "yourusername/mqttctl-broker-agent:$TAG"
+  docker tag mqttctl-broker-agent:build "yourdomain.xyz/yourusername/mqttctl-broker-agent:$TAG"
+  docker push "yourusername/mqttctl-broker-agent:$TAG"
+  docker push "yourdomain.xyz/yourusername/mqttctl-broker-agent:$TAG"
+done
+
 ```
 
 Control-plane image:
 
 ```bash
+SHA=$(git rev-parse --short=12 HEAD)
+VERSION=v0.0.X
+
 docker build -t mqttctl:build -f ./dockerfiles/mqttctl.Dockerfile .
-docker tag mqttctl:build USERNAME/mqttctl:latest
-docker tag mqttctl:build USERNAME/mqttctl:v0.0.X
-docker push USERNAME/mqttctl:latest
-docker push USERNAME/mqttctl:v0.0.X
+
+for TAG in latest "$VERSION" "$VERSION-$SHA"; do
+  docker tag mqttctl:build "yourusername/mqttctl:$TAG"
+  docker tag mqttctl:build "yourdomain.xyz/yourusername/mqttctl:$TAG"
+  docker push "yourusername/mqttctl:$TAG"
+  docker push "yourdomain.xyz/yourusername/mqttctl:$TAG"
+done
 ```
 
 ## Donate
 
 If you like this code and want to donate, you can do so:
 
-* Buy me a coffee: https://www.buymeacoffee.com/Slyke
+* Buy me a coffee: https://www.buymeacoffee.com/yourusername
 * BTC: `bc1q7zew2exzzcydlk7gyh8xfjal6gzfzr4d95a2ut`
 * Eth: `0x3986A26727ceCe5b8092501b8CBC196C754ec2b1`
 * Doge: `DQ41pGzAr25LkbdTCrLVZaVCAySxv5buXc`
