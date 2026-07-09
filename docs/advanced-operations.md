@@ -27,6 +27,7 @@ This guide documents the implementation that is checked into the repo today.
 - proxy mode changes browser HTTP API calls to `config.httpApi.proxy.basePath`, such as `/api-proxy`, and the SvelteKit Node process forwards those requests to `config.httpApi.proxy.upstreamBaseUrl`
 - proxy mode requires `config.httpApi.proxy.upstreamBaseUrl`
 - `config.httpApi.proxy.upstreamBasePath` defaults to `/api`, so `/api-proxy/dynsec/clients` forwards to `{upstreamBaseUrl}/api/dynsec/clients`
+- proxy mode applies to browser HTTP API requests, including the MQTT Explorer SSE stream, but not websocket upgrades. The dashboard websocket still connects to `{basePath}/api/dashboard/ws`, so any reverse proxy in front of the UI must continue to route websocket upgrades for that path.
 
 ## Control Plane vs Broker-Agent Boundary
 
@@ -147,9 +148,10 @@ Managed key-file behavior:
 
 ## Dashboard and Health
 
-The dashboard combines a normal API response and a live websocket feed:
+The dashboard exposes both page-load data and API data, plus a live websocket feed:
 
-- initial load: `GET /api/dashboard`
+- server-rendered page load uses the same dashboard data service as `GET /api/dashboard`
+- API consumers can read the current dashboard payload from `GET /api/dashboard`
 - live updates: websocket upgrade on `/api/dashboard/ws`
 
 Current diagnostics summary includes:

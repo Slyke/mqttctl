@@ -492,7 +492,7 @@ V1 should ship examples for:
 
 The current repository exposes these UI and API routes:
 
-By default these routes remain under `/api`. When HTTP API proxy mode is enabled, the browser-facing API prefix may be changed with `config.httpApi.proxy.basePath` while the upstream API prefix remains independently configured with `config.httpApi.proxy.upstreamBasePath`.
+By default these routes remain under `/api`. When HTTP API proxy mode is enabled, browser HTTP API calls, including the MQTT Explorer SSE stream, may move to `config.httpApi.proxy.basePath` while the upstream API prefix remains independently configured with `config.httpApi.proxy.upstreamBasePath`. The dashboard websocket remains at `{basePath}/api/dashboard/ws`.
 
 ### Session And Auth Routes
 

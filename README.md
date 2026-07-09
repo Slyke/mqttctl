@@ -7,15 +7,15 @@ Run, secure, and troubleshoot Mosquitto from one local-first control plane.
 ## Screenshots
 
 <p>
-  <a href="./images/1_dashboard.png"><img src="./images/1_dashboard.png" alt="mqttctl dashboard" width="49%"></a>
-  <a href="./images/4_dynsec_clients.png"><img src="./images/4_dynsec_clients.png" alt="DynSec client management" width="49%"></a>
+  <a href="./docs/images/1_dashboard.png"><img src="./docs/images/1_dashboard.png" alt="mqttctl dashboard" width="49%"></a>
+  <a href="./docs/images/4_dynsec_clients.png"><img src="./docs/images/4_dynsec_clients.png" alt="DynSec client management" width="49%"></a>
 </p>
 <p>
-  <a href="./images/11_mqtt_connected.png"><img src="./images/11_mqtt_connected.png" alt="MQTT explorer connected session" width="49%"></a>
-  <a href="./images/13_mqtt_config.png"><img src="./images/13_mqtt_config.png" alt="MQTT config editor" width="49%"></a>
+  <a href="./docs/images/11_mqtt_connected.png"><img src="./docs/images/11_mqtt_connected.png" alt="MQTT explorer connected session" width="49%"></a>
+  <a href="./docs/images/13_mqtt_config.png"><img src="./docs/images/13_mqtt_config.png" alt="MQTT config editor" width="49%"></a>
 </p>
 
-Full gallery: [Dashboard](./images/1_dashboard.png), [App Users](./images/2_app_users.png), [DynSec Overview](./images/3_dynsec_top.png), [DynSec Clients](./images/4_dynsec_clients.png), [Client Assignments](./images/5_dynsec_client_assignments.png), [Effective Permissions](./images/6_dynsec_effective_permissions.png), [DynSec Roles](./images/7_dynsec_roles.png), [ACLs and Groups](./images/8_dynsec_acls_groups.png), [ACL Options](./images/9_dynsec_acl_options.png), [MQTT Connection](./images/10_mqtt_connection_options.png), [MQTT Connected Session](./images/11_mqtt_connected.png), [MQTT Subscriptions](./images/12_mqtt_subscriptions.png), [MQTT Config](./images/13_mqtt_config.png), [Audit Log](./images/14_audit.png), [Snapshots](./images/15_snapshots.png).
+Full gallery: [Dashboard](./docs/images/1_dashboard.png), [App Users](./docs/images/2_app_users.png), [DynSec Overview](./docs/images/3_dynsec_top.png), [DynSec Clients](./docs/images/4_dynsec_clients.png), [Client Assignments](./docs/images/5_dynsec_client_assignments.png), [Effective Permissions](./docs/images/6_dynsec_effective_permissions.png), [DynSec Roles](./docs/images/7_dynsec_roles.png), [ACLs and Groups](./docs/images/8_dynsec_acls_groups.png), [ACL Options](./docs/images/9_dynsec_acl_options.png), [MQTT Connection](./docs/images/10_mqtt_connection_options.png), [MQTT Connected Session](./docs/images/11_mqtt_connected.png), [MQTT Subscriptions](./docs/images/12_mqtt_subscriptions.png), [MQTT Config](./docs/images/13_mqtt_config.png), [Audit Log](./docs/images/14_audit.png), [Snapshots](./docs/images/15_snapshots.png).
 
 ## What The App Does Today
 
@@ -33,6 +33,7 @@ Full gallery: [Dashboard](./images/1_dashboard.png), [App Users](./images/2_app_
 - [`docs/advanced-operations.md`](./docs/advanced-operations.md): detailed runtime, auth, broker-agent, DynSec, MQTT explorer, snapshots, and logging behavior
 - [`docs/backup-restore.md`](./docs/backup-restore.md): SQLite and Postgres backup or restore runbooks for app data and broker runtime files
 - [`docs/development.md`](./docs/development.md): contributor workflow, local dev commands, tests, and bind-mounted dev stack notes
+- [`docs/images/`](./docs/images): screenshot assets used by this README
 - [`CERTS.md`](./CERTS.md): TLS walkthrough for Mosquitto, broker-agent HTTPS, and compose-mounted cert files
 - [`spec.md`](./spec.md): current product and technical contract
 - [`AGENTS.md`](./AGENTS.md): repo-wide rules and documentation maintenance expectations
@@ -81,6 +82,7 @@ Then open `http://localhost:3000` and sign in with the bootstrap credentials you
 - `config.httpApi.mode` controls browser API routing:
   - `browser` keeps the current direct browser-to-API path, defaulting to `/api`
   - `proxy` makes the SvelteKit Node process proxy HTTP API requests from `config.httpApi.proxy.basePath` to `config.httpApi.proxy.upstreamBaseUrl`
+- The dashboard websocket remains at `{basePath}/api/dashboard/ws`; HTTP API proxy mode changes browser HTTP API calls, including the MQTT Explorer SSE stream, but not websocket upgrades.
 
 Control-plane builds generate a build label in the form `v<version>-<commit>`. The API logs it at startup, the signed-in app shell shows it in the sidebar, and broker-agent logs its own label on startup as well.
 
@@ -150,6 +152,7 @@ Default local endpoints:
 - [`mqttctl/mqttctl-fe/`](./mqttctl/mqttctl-fe): SvelteKit routes, pages, hooks, styles, dashboard websocket glue, and frontend error catalog
 - [`broker-agent/`](./broker-agent): Rust crate for broker-local file, dynsec, and lifecycle operations
 - [`config/`](./config): sample config, secrets, CSS overrides, compose-mounted broker files, and the optional nginx dev-proxy sample
+- [`docs/`](./docs): operator and contributor guides, plus README screenshot assets under [`docs/images/`](./docs/images)
 - [`dockerfiles/`](./dockerfiles): production and development images
 
 ## Image Publishing

@@ -81,7 +81,7 @@ done
 sha256sum "$BACKUP_DIR"/mqttctl.sqlite* > "$BACKUP_DIR/SHA256SUMS"
 ```
 
-Then archive the runtime files from the same maintenance window:
+Then archive the runtime files from the same maintenance window. Omit optional paths such as `custom.css` or `certs/` if your deployment does not use them.
 
 ```bash
 tar -czf "$BACKUP_DIR/runtime-files.tgz" \
@@ -150,7 +150,7 @@ pg_dump \
 sha256sum "$BACKUP_DIR/mqttctl.pgcustom" > "$BACKUP_DIR/SHA256SUMS"
 ```
 
-Archive the runtime and broker files from the same maintenance window:
+Archive the runtime and broker files from the same maintenance window. Omit optional paths such as `custom.css` or `certs/` if your deployment does not use them.
 
 ```bash
 tar -czf "$BACKUP_DIR/runtime-files.tgz" \
