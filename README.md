@@ -191,7 +191,7 @@ done
 
 If you like this code and want to donate, you can do so:
 
-* Buy me a coffee: https://www.buymeacoffee.com/yourusername
+* Buy me a coffee: https://www.buymeacoffee.com/Slyke
 * BTC: `bc1q7zew2exzzcydlk7gyh8xfjal6gzfzr4d95a2ut`
 * Eth: `0x3986A26727ceCe5b8092501b8CBC196C754ec2b1`
 * Doge: `DQ41pGzAr25LkbdTCrLVZaVCAySxv5buXc`
