@@ -1,10 +1,11 @@
 # mqttctl Guides
 
-These files are the main human-readable guides. Most are operator-facing; [`development.md`](./development.md) is for contributors. The durable product contract still lives in [`../README.md`](../README.md), [`../spec.md`](../spec.md), and the AGENTS files.
+These files are the main human-readable guides. Most are operator-facing; [`development.md`](./development.md) is for contributors. The durable product contract still lives in [`../README.md`](../README.md), [`spec.md`](./spec.md), and the AGENTS files.
 
 - [`getting-started.md`](./getting-started.md): quick-start paths for getting the stack running, auth setup, and first use
+- [`spec.md`](./spec.md): current product and technical contract
 - [`advanced-operations.md`](./advanced-operations.md): implementation details for auth, broker-agent mode, DynSec bootstrap, MQTT explorer, snapshots, and logging
 - [`backup-restore.md`](./backup-restore.md): SQLite and Postgres backup or restore runbooks for app data and broker runtime files
 - [`development.md`](./development.md): local dev workflow, tests, and manual contributor commands
 - [`images/`](./images): screenshot assets used by the top-level README gallery
-- [`../CERTS.md`](../CERTS.md): TLS walkthrough for Mosquitto listeners and broker-agent HTTPS
+- [`CERTS.md`](./CERTS.md): TLS walkthrough for Mosquitto listeners and broker-agent HTTPS

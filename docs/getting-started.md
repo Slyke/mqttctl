@@ -109,7 +109,7 @@ Notes:
 
 ## Quick Start: TLS
 
-Use [`../CERTS.md`](../CERTS.md) when you need any of these:
+Use [`CERTS.md`](./CERTS.md) when you need any of these:
 
 - Mosquitto TLS listeners
 - broker-agent HTTPS
@@ -128,4 +128,4 @@ Private keys stay broker-local and are never downloadable through the app.
 
 - [`advanced-operations.md`](./advanced-operations.md) for the detailed behavior behind auth, DynSec bootstrap, MQTT explorer, snapshots, logging, and broker-agent mode
 - [`development.md`](./development.md) if you need the contributor workflow or local dev commands
-- [`../spec.md`](../spec.md) for the product contract and current API surface
+- [`spec.md`](./spec.md) for the product contract and current API surface

@@ -34,8 +34,8 @@ Full gallery: [Dashboard](./docs/images/1_dashboard.png), [App Users](./docs/ima
 - [`docs/backup-restore.md`](./docs/backup-restore.md): SQLite and Postgres backup or restore runbooks for app data and broker runtime files
 - [`docs/development.md`](./docs/development.md): contributor workflow, local dev commands, tests, and bind-mounted dev stack notes
 - [`docs/images/`](./docs/images): screenshot assets used by this README
-- [`CERTS.md`](./CERTS.md): TLS walkthrough for Mosquitto, broker-agent HTTPS, and compose-mounted cert files
-- [`spec.md`](./spec.md): current product and technical contract
+- [`docs/CERTS.md`](./docs/CERTS.md): TLS walkthrough for Mosquitto, broker-agent HTTPS, and compose-mounted cert files
+- [`docs/spec.md`](./docs/spec.md): current product and technical contract
 - [`AGENTS.md`](./AGENTS.md): repo-wide rules and documentation maintenance expectations
 - [`mqttctl/AGENTS.md`](./mqttctl/AGENTS.md), [`mqttctl/mqttctl-api/AGENTS.md`](./mqttctl/mqttctl-api/AGENTS.md), [`mqttctl/mqttctl-fe/AGENTS.md`](./mqttctl/mqttctl-fe/AGENTS.md), [`broker-agent/AGENTS.md`](./broker-agent/AGENTS.md): package-level boundaries
 
@@ -57,7 +57,7 @@ Then open `http://localhost:3000` and sign in with the bootstrap credentials you
 
 - OIDC: start from [`config/compose/gui-api/mqttctl.config.example-oidc-localauth.json`](./config/compose/gui-api/mqttctl.config.example-oidc-localauth.json) and [`config/compose/gui-api/mqttctl.secrets.example-oidc.json`](./config/compose/gui-api/mqttctl.secrets.example-oidc.json), then restart the app
 - Trusted-header auth: add `auth.headerEnabled`, `auth.header.trustedCidrs`, `auth.header.usernameHeader`, and `auth.header.defaultRole`; details are in [`docs/getting-started.md`](./docs/getting-started.md)
-- TLS for Mosquitto or broker-agent HTTPS: follow [`CERTS.md`](./CERTS.md)
+- TLS for Mosquitto or broker-agent HTTPS: follow [`docs/CERTS.md`](./docs/CERTS.md)
 
 ## Runtime Model
 

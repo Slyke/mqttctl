@@ -14,7 +14,7 @@ Notes:
 
 - the `mqttctl` dev container runs `npm install` on startup so new dependencies appear without manually clearing the named volume
 - the optional nginx proxy sample under [`../config/nginx-dev-proxy/`](../config/nginx-dev-proxy) is separate from the base dev loop
-- if you want TLS in front of the dev UI, follow [`../CERTS.md`](../CERTS.md)
+- if you want TLS in front of the dev UI, follow [`CERTS.md`](./CERTS.md)
 
 ## Manual Workspace Commands
 
