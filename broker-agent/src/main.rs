@@ -1,4 +1,5 @@
 mod agent;
+mod build_info;
 mod config;
 mod errors;
 mod http_api;
@@ -18,10 +19,7 @@ use mosquitto::MosquittoSupervisor;
 use tokio::task::JoinSet;
 
 use crate::agent::BrokerAgentService;
-
-const BUILD_VERSION: &str = env!("MQTTCTL_BUILD_VERSION");
-const BUILD_COMMIT_HASH: &str = env!("MQTTCTL_BUILD_COMMIT_HASH");
-const BUILD_LABEL: &str = env!("MQTTCTL_BUILD_LABEL");
+use crate::build_info::{BUILD_COMMIT_HASH, BUILD_LABEL, BUILD_VERSION};
 
 #[tokio::main]
 async fn main() {

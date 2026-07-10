@@ -259,6 +259,12 @@ export interface ManagedBrokerKeyFileDownload {
   content: string;
 }
 
+export interface BrokerAgentRuntimeInfo {
+  brokerAgentVersion: string | null;
+  brokerAgentBuildHash: string | null;
+  mqttServerVersion: string | null;
+}
+
 export interface MqttConnectionDefaults {
   host: string;
   port: number;

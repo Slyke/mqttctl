@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { apiRequest, buildApiUrl } from '$lib/stores/api';
-  import type { ManagedBrokerKeyFileId, ManagedBrokerKeyFileStatus } from '$lib/types';
+  import type { BrokerAgentRuntimeInfo, ManagedBrokerKeyFileId, ManagedBrokerKeyFileStatus } from '$lib/types';
 
   export let data: {
     canManageBroker: boolean;
@@ -17,12 +17,20 @@
   let keyFiles: ManagedBrokerKeyFileStatus[] = [];
   let keyFilesLoading = false;
   let keyFilesError = '';
+  let brokerAgentRuntimeInfo: BrokerAgentRuntimeInfo | null = null;
 
   const keyFileLabels: Record<ManagedBrokerKeyFileId, string> = {
     caFile: 'CA File',
     mosquittoPublicKey: 'Mosquitto Public Key',
     brokerPublicKey: 'Broker Public Key'
   };
+
+  const unwrapApiData = <T,>(payload: T | { data: T }): T =>
+    payload && typeof payload === 'object' && 'data' in payload
+      ? payload.data
+      : payload;
+
+  const runtimeValue = ({ value }: { value: string | null }) => value ?? 'Unavailable';
 
   const keyFileStatusTone = ({ configured, exists }: ManagedBrokerKeyFileStatus) => {
     if (!configured) return '';
@@ -39,11 +47,20 @@
     keyFilesError = '';
 
     try {
-      const result = await apiRequest<{ files: ManagedBrokerKeyFileStatus[] }>({
+      const result = unwrapApiData(await apiRequest<{
+        data: {
+          files: ManagedBrokerKeyFileStatus[];
+          brokerAgentRuntimeInfo: BrokerAgentRuntimeInfo | null;
+        };
+      } | {
+        files: ManagedBrokerKeyFileStatus[];
+        brokerAgentRuntimeInfo: BrokerAgentRuntimeInfo | null;
+      }>({
         url: '/api/config/key-files',
         method: 'GET'
-      });
+      }));
       keyFiles = result.files;
+      brokerAgentRuntimeInfo = result.brokerAgentRuntimeInfo;
     } catch (caught) {
       keyFilesError = caught instanceof Error ? caught.message : 'Failed loading managed key files.';
     } finally {
@@ -56,10 +73,10 @@
     error = '';
 
     try {
-      const result = await apiRequest<{ current: string }>({
+      const result = unwrapApiData(await apiRequest<{ data: { current: string } } | { current: string }>({
         url: '/api/config/pull',
         method: 'GET'
-      });
+      }));
       configText = result.current;
       lastPulledConfig = result.current;
       message = 'Broker config pulled.';
@@ -78,11 +95,11 @@
     }
 
     try {
-      const result = await apiRequest<{ result: { current: string } }>({
+      const result = unwrapApiData(await apiRequest<{ data: { result: { current: string } } } | { result: { current: string } }>({
         url: '/api/config/push',
         method: 'POST',
         body: { rendered: configText, expectedCurrent: lastPulledConfig }
-      });
+      }));
       configText = result.result.current;
       lastPulledConfig = result.result.current;
       message = 'Broker config pushed.';
@@ -212,6 +229,30 @@
       <div class="muted">No managed key files were reported by the broker yet.</div>
     {/if}
   </article>
+
+  <article class="panel stack">
+    <div class="config-section-header">
+      <div>
+        <h2>Broker Agent Runtime</h2>
+        <p class="muted">Runtime metadata reported by the configured broker-agent.</p>
+      </div>
+    </div>
+
+    <div class="runtime-info-grid">
+      <section class="runtime-info-item stack-tight">
+        <span class="runtime-info-label">Agent Version</span>
+        <code>{runtimeValue({ value: brokerAgentRuntimeInfo?.brokerAgentVersion ?? null })}</code>
+      </section>
+      <section class="runtime-info-item stack-tight">
+        <span class="runtime-info-label">Agent Build Hash</span>
+        <code>{runtimeValue({ value: brokerAgentRuntimeInfo?.brokerAgentBuildHash ?? null })}</code>
+      </section>
+      <section class="runtime-info-item stack-tight">
+        <span class="runtime-info-label">MQTT Server Version</span>
+        <code>{runtimeValue({ value: brokerAgentRuntimeInfo?.mqttServerVersion ?? null })}</code>
+      </section>
+    </div>
+  </article>
 </section>
 
 <style>
@@ -261,6 +302,32 @@
   }
 
   .key-file-path {
+    word-break: break-word;
+  }
+
+  .runtime-info-grid {
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  }
+
+  .runtime-info-item {
+    padding: var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-elevated);
+  }
+
+  .runtime-info-label {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .runtime-info-item code {
+    white-space: normal;
     word-break: break-word;
   }
 </style>

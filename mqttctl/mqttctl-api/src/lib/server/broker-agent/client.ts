@@ -4,6 +4,7 @@ import type { LoadedRuntimeConfig } from '$server/config/load';
 import type { AppLogger } from '$server/logging/logger';
 import { AppError, createAppError, resolveErrorCode } from '$server/logging/errors';
 import type {
+  BrokerAgentRuntimeInfo,
   ManagedBrokerKeyFileDownload,
   ManagedBrokerKeyFileId,
   ManagedBrokerKeyFileStatus
@@ -32,6 +33,12 @@ interface AgentOperationResult {
 interface BrokerAgentHealth {
   brokerRunning: boolean;
   brokerPid: number | null;
+}
+
+interface AgentRuntimeResponse {
+  brokerAgentVersion?: unknown;
+  brokerAgentBuildHash?: unknown;
+  mqttServerVersion?: unknown;
 }
 
 interface RequestResponse<T> {
@@ -78,6 +85,15 @@ const describeRemoteDetails = ({ details }: { details: unknown }) => {
   if (atomicCause) return `Atomic cause: ${atomicCause}`;
   return `Cause: ${cause}`;
 };
+
+const normalizeOptionalString = ({ value }: { value: unknown }) =>
+  typeof value === 'string' && value.trim() ? value.trim() : null;
+
+const normalizeRuntimeInfo = ({ value }: { value: AgentRuntimeResponse }): BrokerAgentRuntimeInfo => ({
+  brokerAgentVersion: normalizeOptionalString({ value: value.brokerAgentVersion }),
+  brokerAgentBuildHash: normalizeOptionalString({ value: value.brokerAgentBuildHash }),
+  mqttServerVersion: normalizeOptionalString({ value: value.mqttServerVersion })
+});
 
 export class BrokerAgentClient {
   constructor(
@@ -353,6 +369,16 @@ export class BrokerAgentClient {
     });
 
     return response.health;
+  }
+
+  async readRuntime({ correlationId }: { correlationId: string | null }) {
+    const response = await this.request<AgentRuntimeResponse>({
+      method: 'GET',
+      path: '/runtime',
+      correlationId
+    });
+
+    return normalizeRuntimeInfo({ value: response });
   }
 
   async writeBrokerConfig({

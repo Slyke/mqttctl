@@ -127,6 +127,7 @@ The control plane remains one product, but the repository now has two deployable
   - `mqttctl-api/` for internal server modules, auth, DB, dynsec, audit, snapshots, and jobs
 - `broker-agent/`
   - broker-local REST agent with a shared API key on protected endpoints, plus unauthenticated `/health` and `/healthz`
+  - protected runtime metadata endpoint for broker-agent version, broker-agent build hash, and best-effort Mosquitto server version
   - full broker-config read and write operations against the configured main config path
   - standalone broker reload and restart
   - dynsec command execution and state-file reads
@@ -303,6 +304,7 @@ For a chosen client, show:
 
 - The configured broker config path is the file edited by the Config page.
 - The MQTT Config page may also check and download only the configured `broker.keyFiles.caFile`, `broker.keyFiles.mosquittoPublicKey`, and `broker.keyFiles.brokerPublicKey` files.
+- When broker-agent mode is enabled, the MQTT Config page also shows broker-agent version, broker-agent build hash, and the Mosquitto server version when broker-agent can determine it.
 - Private keys are intentionally excluded from the download surface.
 - The app loads the current broker config text and pushes edited text back without rendering or storing an intermediate structured config.
 - Raw broker-config push is conflict-checked against the last pulled text and rejected when the broker file changed in the meantime.

@@ -1136,13 +1136,14 @@ meter::-moz-meter-bar {
   display: flex;
   justify-content: flex-end;
   min-width: max-content;
-  padding: 0.45rem 0.55rem 0;
+  padding: 0.45rem 0.55rem 0.5rem;
 }
 
+button.table-copy-json-button.button-ghost,
 .table-copy-json-button {
-  min-height: 1.9rem;
-  padding: 0.35rem 0.65rem 0.29rem;
-  border-bottom-width: 0.16rem;
+  min-height: 1.68rem;
+  padding: 0.26rem 0.6rem 0.22rem;
+  border-bottom-width: 0.12rem;
   border-radius: var(--radius-sm);
   font-size: 0.72rem;
   letter-spacing: 0;

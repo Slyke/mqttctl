@@ -42,6 +42,7 @@ This guide documents the implementation that is checked into the repo today.
   - dynsec state reads
   - dynsec commands
   - managed key-file listing and downloads
+  - runtime metadata reads for broker-agent version, broker-agent build hash, and best-effort Mosquitto server version
 
 Important details:
 
@@ -49,6 +50,7 @@ Important details:
 - `broker.agent.insecure` only disables TLS verification for the app-to-agent HTTPS hop
 - broker-agent `/health` and `/healthz` do not require the shared API key
 - all other broker-agent endpoints require `x-api-key`
+- when the API can read broker-agent runtime metadata at startup, it writes the values to console/file/curl logging sinks and records a `broker_agent.connect` audit entry
 - broker-agent `listen.http.host` and `listen.https.host` must be IP addresses, not DNS names
 - if the dynsec state file is missing and `broker.dynsecBootstrap` is configured, broker-agent initializes it with `mosquitto_ctrl dynsec init`
 
@@ -145,6 +147,7 @@ Managed key-file behavior:
   - `brokerPublicKey`
 - private keys are never exposed
 - if broker-agent is enabled but does not implement `/broker-key-files`, the control plane falls back to reporting configured metadata from its own config JSON5
+- below key management, the page shows broker-agent version, broker-agent build hash, and Mosquitto server version when broker-agent `/runtime` is available
 
 ## Dashboard and Health
 

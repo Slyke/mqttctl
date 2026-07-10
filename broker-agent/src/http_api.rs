@@ -10,6 +10,7 @@ use serde::Deserialize;
 
 use crate::{
     agent::{BrokerAgentService, DynsecConnection},
+    build_info::{BUILD_COMMIT_HASH, BUILD_VERSION},
     errors::{ok, AppError},
     logging::Logger,
 };
@@ -48,6 +49,7 @@ pub fn router(state: ApiState) -> Router {
         .route("/broker-key-files/:file_id", get(get_managed_key_file))
         .route("/broker/reload", post(post_broker_reload))
         .route("/broker/restart", post(post_broker_restart))
+        .route("/runtime", get(get_runtime))
         .route("/dynsec/state", get(get_dynsec_state))
         .route("/dynsec/command", post(post_dynsec_command))
         .with_state(state)
@@ -157,6 +159,23 @@ async fn post_broker_restart(
         .restart_broker(correlation_id.as_deref())
         .await?;
     Ok(ok(serde_json::json!({ "operation": operation })))
+}
+
+async fn get_runtime(
+    State(state): State<ApiState>,
+    headers: HeaderMap,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let correlation_id = correlation_id(&headers);
+    require_api_key(&state, &headers, correlation_id.as_deref())?;
+    let mqtt_server_version = state
+        .service
+        .mqtt_server_version(correlation_id.as_deref())
+        .await;
+    Ok(ok(serde_json::json!({
+        "brokerAgentVersion": BUILD_VERSION,
+        "brokerAgentBuildHash": BUILD_COMMIT_HASH,
+        "mqttServerVersion": mqtt_server_version,
+    })))
 }
 
 async fn get_dynsec_state(

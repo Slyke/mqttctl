@@ -9,11 +9,16 @@ export const GET = async (event) => {
       correlationId: event.locals.correlationId
     });
 
-    const files = await event.locals.appContext.brokerConfig.listManagedKeyFiles({
-      correlationId: event.locals.correlationId
-    });
+    const [files, brokerAgentRuntimeInfo] = await Promise.all([
+      event.locals.appContext.brokerConfig.listManagedKeyFiles({
+        correlationId: event.locals.correlationId
+      }),
+      event.locals.appContext.brokerConfig.readBrokerAgentRuntimeInfo({
+        correlationId: event.locals.correlationId
+      })
+    ]);
 
-    return ok({ data: { files } });
+    return ok({ data: { files, brokerAgentRuntimeInfo } });
   } catch (error) {
     return handleApiError({ event, error });
   }

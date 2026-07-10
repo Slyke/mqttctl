@@ -8,6 +8,7 @@ import { AppError, createAppError } from '$server/logging/errors';
 import { runCommand } from '$server/broker/command-runner';
 import type { BrokerAgentClient } from '$server/broker-agent/client';
 import type {
+  BrokerAgentRuntimeInfo,
   ManagedBrokerKeyFileDownload,
   ManagedBrokerKeyFileId,
   ManagedBrokerKeyFileStatus
@@ -30,6 +31,31 @@ export class BrokerConfigService {
     }
 
     return await readFile(this.runtimeConfig.config.broker.mainConfigPath, 'utf8');
+  }
+
+  async readBrokerAgentRuntimeInfo({
+    correlationId = null
+  }: {
+    correlationId?: string | null;
+  } = {}): Promise<BrokerAgentRuntimeInfo | null> {
+    if (!this.brokerAgent.isConfigured()) return null;
+
+    try {
+      return await this.brokerAgent.readRuntime({ correlationId });
+    } catch (error) {
+      this.logger.warn({
+        caller: 'broker-config::readBrokerAgentRuntimeInfo',
+        message: 'Broker agent runtime metadata is unavailable.',
+        correlationId,
+        ...(error instanceof AppError ? {
+          errorKey: error.errorKey,
+          errorCode: error.errorCode,
+          errorChain: error.errorChain
+        } : {}),
+        rootCause: error
+      });
+      return null;
+    }
   }
 
   private resolveManagedKeyFilePath({

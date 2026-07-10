@@ -114,9 +114,9 @@ impl BrokerAgentService {
             .map(|file_id| {
                 let configured_path = self.managed_key_file_path(file_id, None).ok().flatten();
                 let configured = configured_path.is_some();
-                let exists_result = configured_path.as_deref().map(|file_path| {
-                    self.managed_key_file_exists(file_id, file_path, None)
-                });
+                let exists_result = configured_path
+                    .as_deref()
+                    .map(|file_path| self.managed_key_file_exists(file_id, file_path, None));
                 let file_name = configured_path
                     .as_ref()
                     .and_then(|file_path| Path::new(file_path).file_name())
@@ -321,6 +321,26 @@ impl BrokerAgentService {
                 Some(json!({ "cause": error.to_string() })),
             )
         })
+    }
+
+    pub async fn mqtt_server_version(&self, correlation_id: Option<&str>) -> Option<String> {
+        match self.supervisor.mqtt_server_version(correlation_id).await {
+            Ok(version) => version,
+            Err(error) => {
+                self.logger.warn(
+                    "agent::mqtt_server_version",
+                    "Failed reading Mosquitto server version.",
+                    correlation_id,
+                    Some(json!({
+                        "reason": error.reason,
+                        "errorKey": error.error_key,
+                        "errorCode": error.error_code,
+                        "details": error.details,
+                    })),
+                );
+                None
+            }
+        }
     }
 
     pub async fn run_dynsec_command(

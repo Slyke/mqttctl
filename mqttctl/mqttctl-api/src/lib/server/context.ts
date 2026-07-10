@@ -453,6 +453,100 @@ const logStartupDiagnostics = ({
   });
 };
 
+const logBrokerAgentRuntimeInfo = async ({
+  runtimeConfig,
+  logger,
+  audit,
+  brokerAgent,
+  correlationId
+}: {
+  runtimeConfig: LoadedRuntimeConfig;
+  logger: AppLogger;
+  audit: AuditService;
+  brokerAgent: BrokerAgentClient;
+  correlationId: string | null;
+}) => {
+  if (!brokerAgent.isConfigured()) return;
+
+  const auditCorrelationId = correlationId ?? createMaintenanceCorrelationId();
+  const baseUrl = runtimeConfig.config.broker.agent?.baseUrl ?? null;
+  const maxAttempts = dynsecBootstrapRetryAttempts;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const runtimeInfo = await brokerAgent.readRuntime({ correlationId });
+      const versionContext = {
+        baseUrl,
+        agent: {
+          version: runtimeInfo.brokerAgentVersion,
+          buildHash: runtimeInfo.brokerAgentBuildHash
+        },
+        broker: {
+          mqttServerVersion: runtimeInfo.mqttServerVersion
+        },
+        brokerAgent: {
+          baseUrl,
+          ...runtimeInfo
+        }
+      };
+
+      generateLog({
+        logger,
+        level: 'info',
+        caller: 'context::brokerAgentRuntime',
+        message: `Connected to broker agent ${runtimeInfo.brokerAgentVersion ?? 'unknown'} (${runtimeInfo.brokerAgentBuildHash ?? 'unknown'}).`,
+        correlationId,
+        context: versionContext,
+        sinks: {
+          console: true,
+          file: true,
+          curl: true
+        }
+      });
+
+      await audit.record({
+        actor: null,
+        authMode: null,
+        sourceIp: null,
+        correlationId: auditCorrelationId,
+        action: 'broker_agent.connect',
+        targetType: 'broker_agent',
+        targetId: baseUrl,
+        afterSummary: versionContext,
+        commandResult: {
+          connected: true,
+          runtime: runtimeInfo
+        },
+        success: true
+      });
+      return;
+    } catch (error) {
+      if (attempt < maxAttempts) {
+        await sleep({ ms: dynsecBootstrapRetryDelayMs });
+        continue;
+      }
+
+      logger.warn({
+        caller: 'context::brokerAgentRuntime',
+        message: 'Broker agent runtime metadata could not be read.',
+        ...(error instanceof AppError ? {
+          errorKey: error.errorKey,
+          errorCode: error.errorCode,
+          errorChain: error.errorChain
+        } : {}),
+        correlationId,
+        context: {
+          baseUrl,
+          attempt,
+          maxAttempts,
+          retryDelayMs: dynsecBootstrapRetryDelayMs
+        },
+        rootCause: error
+      });
+    }
+  }
+};
+
 const createContext = async ({ correlationId }: { correlationId: string | null }) => {
   const runtimeConfig = await loadRuntimeConfig({ correlationId });
   const loggerOptions = parseLoggerOptionsFromEnv({ config: runtimeConfig.config.logging });
@@ -491,6 +585,13 @@ const createContext = async ({ correlationId }: { correlationId: string | null }
   const mqtt = new MqttExplorerService(runtimeConfig, logger);
 
   await auth.bootstrapInitialAdmin({ correlationId });
+  void logBrokerAgentRuntimeInfo({
+    runtimeConfig,
+    logger,
+    audit,
+    brokerAgent,
+    correlationId
+  });
   void ensureDynsecBootstrapDefaultRole({
     dynsec,
     brokerAgent,

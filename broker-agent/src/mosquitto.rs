@@ -201,6 +201,47 @@ impl MosquittoSupervisor {
         })
     }
 
+    pub async fn mqtt_server_version(
+        &self,
+        correlation_id: Option<&str>,
+    ) -> Result<Option<String>, AppError> {
+        let executable = self.config.command.first().ok_or_else(|| {
+            AppError::new(
+                "mosquitto::mqtt_server_version",
+                "Broker command is empty.",
+                "CONFIG_VALIDATION_FAILED",
+                500,
+                correlation_id.map(str::to_string),
+                None,
+            )
+        })?;
+        let output = Command::new(executable)
+            .arg("-h")
+            .stdin(Stdio::null())
+            .output()
+            .await
+            .map_err(|error| {
+                AppError::new(
+                    "mosquitto::mqtt_server_version",
+                    "Failed starting Mosquitto to inspect its version.",
+                    "BROKER_PROCESS_FAILED",
+                    500,
+                    correlation_id.map(str::to_string),
+                    Some(json!({
+                        "executable": executable,
+                        "args": ["-h"],
+                        "cause": error.to_string(),
+                    })),
+                )
+            })?;
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let combined = format!("{stdout}\n{stderr}");
+
+        Ok(parse_mosquitto_version(&combined))
+    }
+
     pub async fn reload(&self, correlation_id: Option<&str>) -> Result<CommandResult, AppError> {
         let pid = {
             let mut child_guard = self.child.lock().await;
@@ -452,6 +493,14 @@ impl MosquittoSupervisor {
             stderr: String::new(),
         })
     }
+}
+
+fn parse_mosquitto_version(output: &str) -> Option<String> {
+    output.lines().find_map(|line| {
+        let trimmed = line.trim();
+        let version = trimmed.strip_prefix("mosquitto version ")?;
+        version.split_whitespace().next().map(str::to_string)
+    })
 }
 
 fn split_command(
