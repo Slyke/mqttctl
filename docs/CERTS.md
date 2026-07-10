@@ -16,7 +16,7 @@ broker-agent HTTPS goes into:
 
 `mqttctl` client-side MQTT TLS settings go into:
 
-- `./config/compose/gui-api/mqttctl.config.json`
+- `./config/compose/gui-api/mqttctl.config.json5`
 
 MQTT Config page downloads for the CA and public key files are configured through:
 
@@ -153,11 +153,11 @@ protocol websockets
 
 If `mqttctl` should connect to the TLS MQTT port, edit:
 
-- `./config/compose/gui-api/mqttctl.config.json`
+- `./config/compose/gui-api/mqttctl.config.json5`
 
 Example:
 
-```json
+```json5
 "broker": {
   "host": "broker-agent",
   "port": 8883,
@@ -226,9 +226,9 @@ The broker-agent config should also expose the same symbolic key-file paths:
 
 If `mqttctl` should call broker-agent over HTTPS, also edit:
 
-- `./config/compose/gui-api/mqttctl.config.json`
+- `./config/compose/gui-api/mqttctl.config.json5`
 
-```json
+```json5
 "agent": {
   "baseUrl": "https://broker-agent:3943",
   "timeoutMs": 10000

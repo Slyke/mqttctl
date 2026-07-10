@@ -25,8 +25,8 @@ Back up these items together and store them somewhere encrypted:
 
 For the compose layout in this repo, that usually means:
 
-- `config/compose/gui-api/mqttctl.config.json`
-- `config/compose/gui-api/mqttctl.secrets.json`
+- `config/compose/gui-api/mqttctl.config.json5`
+- `config/compose/gui-api/mqttctl.secrets.json5`
 - `config/compose/gui-api/custom.css`
 - `config/compose/gui-api/app-data/`
 - `config/compose/mqtt-agent/broker-agent.config.json`
@@ -85,8 +85,8 @@ Then archive the runtime files from the same maintenance window. Omit optional p
 
 ```bash
 tar -czf "$BACKUP_DIR/runtime-files.tgz" \
-  config/compose/gui-api/mqttctl.config.json \
-  config/compose/gui-api/mqttctl.secrets.json \
+  config/compose/gui-api/mqttctl.config.json5 \
+  config/compose/gui-api/mqttctl.secrets.json5 \
   config/compose/gui-api/custom.css \
   config/compose/mqtt-agent/broker-agent.config.json \
   config/compose/mqtt-agent/mosquitto.conf \
@@ -154,8 +154,8 @@ Archive the runtime and broker files from the same maintenance window. Omit opti
 
 ```bash
 tar -czf "$BACKUP_DIR/runtime-files.tgz" \
-  config/compose/gui-api/mqttctl.config.json \
-  config/compose/gui-api/mqttctl.secrets.json \
+  config/compose/gui-api/mqttctl.config.json5 \
+  config/compose/gui-api/mqttctl.secrets.json5 \
   config/compose/gui-api/custom.css \
   config/compose/mqtt-agent/broker-agent.config.json \
   config/compose/mqtt-agent/mosquitto.conf \

@@ -9,15 +9,15 @@ services:
       PORT: "3000"
       HOST: "0.0.0.0"
       ORIGIN: "http://localhost:3000"
-      MQTTCTL_CONFIG_PATH: /app/config/mqttctl.config.json
-      MQTTCTL_SECRETS_PATH: /app/config/mqttctl.secrets.json
+      MQTTCTL_CONFIG_PATH: /app/config/mqttctl.config.json5
+      MQTTCTL_SECRETS_PATH: /app/config/mqttctl.secrets.json5
       MQTTCTL_DB_KIND: sqlite
       MQTTCTL_SQLITE_PATH: /app/data/mqttctl.sqlite
       MQTTCTL_UI_OVERRIDE_CSS_PATH: /app/config/custom.css
       MQTTCTL_LOG_CONSOLE_FORMAT: text
     volumes:
-      - ./config/compose/gui-api/mqttctl.config.json:/app/config/mqttctl.config.json:ro
-      - ./config/compose/gui-api/mqttctl.secrets.json:/app/config/mqttctl.secrets.json:ro
+      - ./config/compose/gui-api/mqttctl.config.json5:/app/config/mqttctl.config.json5:ro
+      - ./config/compose/gui-api/mqttctl.secrets.json5:/app/config/mqttctl.secrets.json5:ro
       - ./config/compose/gui-api/custom.css:/app/config/custom.css:ro
       - ./config/compose/gui-api/app-data:/app/data
     ports:

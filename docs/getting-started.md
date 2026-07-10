@@ -11,11 +11,11 @@ This guide is intentionally layered:
 1. Copy the example files into the filenames that compose mounts:
 
 ```bash
-cp config/compose/gui-api/mqttctl.config.example-localauth.json config/compose/gui-api/mqttctl.config.json
-cp config/compose/gui-api/mqttctl.secrets.example-localauth.json config/compose/gui-api/mqttctl.secrets.json
+cp config/compose/gui-api/mqttctl.config.example-localauth.json5 config/compose/gui-api/mqttctl.config.json5
+cp config/compose/gui-api/mqttctl.secrets.example-localauth.json5 config/compose/gui-api/mqttctl.secrets.json5
 ```
 
-2. Edit `config/compose/gui-api/mqttctl.secrets.json` if you want different bootstrap credentials. The checked-in defaults are in [`../config/compose/gui-api/mqttctl.secrets.example-localauth.json`](../config/compose/gui-api/mqttctl.secrets.example-localauth.json).
+2. Edit `config/compose/gui-api/mqttctl.secrets.json5` if you want different bootstrap credentials. The checked-in defaults are in [`../config/compose/gui-api/mqttctl.secrets.example-localauth.json5`](../config/compose/gui-api/mqttctl.secrets.example-localauth.json5).
 
 3. Start the default stack:
 
@@ -25,7 +25,7 @@ docker compose up --build
 
 4. Open `http://localhost:3000`.
 
-5. Sign in with the local bootstrap user from `mqttctl.secrets.json`.
+5. Sign in with the local bootstrap user from `mqttctl.secrets.json5`.
 
 6. Open these pages first:
 
@@ -39,7 +39,7 @@ docker compose up --build
 
 - the control plane reads `MQTTCTL_CONFIG_PATH` and `MQTTCTL_SECRETS_PATH` once at startup
 - broker-agent reads `MQTTCTL_BROKER_AGENT_CONFIG_PATH` once at startup
-- changes to those JSON files require a process restart
+- changes to the control-plane JSON5 files or broker-agent JSON file require a process restart
 - the default DB mode is SQLite with:
   - `MQTTCTL_DB_KIND=sqlite`
   - `MQTTCTL_SQLITE_PATH=/path/to/mqttctl.sqlite`
@@ -54,8 +54,8 @@ docker compose up --build
 1. Start from the checked-in OIDC examples:
 
 ```bash
-cp config/compose/gui-api/mqttctl.config.example-oidc-localauth.json config/compose/gui-api/mqttctl.config.json
-cp config/compose/gui-api/mqttctl.secrets.example-oidc.json config/compose/gui-api/mqttctl.secrets.json
+cp config/compose/gui-api/mqttctl.config.example-oidc-localauth.json5 config/compose/gui-api/mqttctl.config.json5
+cp config/compose/gui-api/mqttctl.secrets.example-oidc.json5 config/compose/gui-api/mqttctl.secrets.json5
 ```
 
 2. Edit these config fields:
@@ -69,9 +69,9 @@ cp config/compose/gui-api/mqttctl.secrets.example-oidc.json config/compose/gui-a
 - optional `auth.oidc.userinfoEndpoint`
 - optional claim overrides and scopes
 
-3. Put only `oidcClientSecret` in the secrets JSON.
+3. Put only `oidcClientSecret` in the secrets JSON5 file.
 
-4. Restart the app. Config and secrets JSON are read only at process start.
+4. Restart the app. Config and secrets JSON5 files are read only at process start.
 
 5. Use `Sign In With OIDC` on the login page.
 
@@ -103,7 +103,7 @@ Notes:
 
 - `headerEnabled` and `oidcEnabled` cannot both be `true`
 - you may leave `localEnabled` on if you want local fallback accounts
-- restart the app after changing the config JSON
+- restart the app after changing the config JSON5 file
 - the current implementation accepts `groupsHeader` in config, but it does not map proxy groups to app roles yet
 - trusted-header auth is based on the request source IP the app sees directly, so make sure your proxy or ingress preserves the expected client address semantics
 

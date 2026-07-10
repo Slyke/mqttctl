@@ -14,8 +14,8 @@ services:
       _DEV_ALLOWED_HOST: "mqttctl.domain.xyz"
       HOST: "0.0.0.0"
       ORIGIN: "https://mqttctl.domain.xyz"
-      MQTTCTL_CONFIG_PATH: /workspace/config/compose/gui-api/mqttctl.config.json
-      MQTTCTL_SECRETS_PATH: /workspace/config/compose/gui-api/mqttctl.secrets.json
+      MQTTCTL_CONFIG_PATH: /workspace/config/compose/gui-api/mqttctl.config.json5
+      MQTTCTL_SECRETS_PATH: /workspace/config/compose/gui-api/mqttctl.secrets.json5
       MQTTCTL_DB_KIND: sqlite
       MQTTCTL_SQLITE_PATH: /workspace/config/compose/gui-api/app-data/mqttctl.sqlite
       MQTTCTL_UI_OVERRIDE_CSS_PATH: /workspace/config/compose/gui-api/custom.css

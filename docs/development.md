@@ -36,8 +36,8 @@ npm run error-validate
 Set the minimum runtime env vars before running the built app manually:
 
 ```bash
-export MQTTCTL_CONFIG_PATH=/abs/path/to/mqttctl.config.json
-export MQTTCTL_SECRETS_PATH=/abs/path/to/mqttctl.secrets.json
+export MQTTCTL_CONFIG_PATH=/abs/path/to/mqttctl.config.json5
+export MQTTCTL_SECRETS_PATH=/abs/path/to/mqttctl.secrets.json5
 export MQTTCTL_DB_KIND=sqlite
 export MQTTCTL_SQLITE_PATH=/abs/path/to/mqttctl.sqlite
 ```

@@ -1,0 +1,95 @@
+{
+  // Public URL used for redirects, same-origin checks, and browser-facing links.
+  appName: 'mqttctl',
+  publicBaseUrl: 'http://localhost:3000',
+  basePath: '',
+
+  // In compose, the browser talks directly to the SvelteKit-hosted API routes.
+  httpApi: {
+    mode: 'browser',
+    browserBasePath: '/api',
+    proxy: {
+      basePath: '/api-proxy',
+      upstreamBaseUrl: null,
+      upstreamBasePath: '/api',
+    },
+  },
+
+  ui: {
+    defaultTheme: 'dark',
+    defaultFont: 'ui-mono',
+    // Point this at a JSON language override file to relabel DynSec UI text.
+    languageFilePath: null,
+  },
+
+  logging: {
+    includeCorrelationId: true,
+    includeUserAgent: true,
+    includeNormalizedUsername: true,
+    includeSessionExpiry: true,
+    sinks: {
+      console: {
+        enabled: true,
+        levels: ['debug', 'info', 'warn', 'error'],
+        format: 'text',
+      },
+      file: {
+        enabled: false,
+        levels: ['info', 'warn', 'error'],
+        format: 'json',
+        // Required only when the file sink is enabled.
+        path: null,
+      },
+      curl: {
+        enabled: false,
+        levels: ['info', 'warn', 'error'],
+        url: null,
+        method: 'POST',
+        timeoutMs: 2500,
+      },
+    },
+    failedLoginAttempts: {
+      level: 'warn',
+      console: true,
+      file: false,
+      curl: false,
+    },
+    successfulLogin: {
+      level: 'info',
+      console: true,
+      file: false,
+      curl: false,
+    },
+  },
+
+  auth: {
+    localEnabled: true,
+    oidcEnabled: false,
+    headerEnabled: false,
+    sessionTtlMinutes: 1440,
+  },
+
+  broker: {
+    // The compose service name resolves from the mqttctl container.
+    host: 'broker-agent',
+    port: 1883,
+    dynsecAdminUsername: 'admin',
+    controlBinaryPath: 'mosquitto_ctrl',
+    // When this block is present, broker-local file and process operations
+    // are delegated to the Rust broker-agent sidecar.
+    agent: {
+      baseUrl: 'http://broker-agent:3900',
+      timeoutMs: 60000,
+      insecure: false,
+    },
+    dynsecStateFilePath: '/mosquitto/data/dynamic-security.json',
+    mainConfigPath: '/mosquitto/config/mosquitto.conf',
+    // Public artifacts only. Private key files are intentionally omitted.
+    keyFiles: {
+      caFile: '/mosquitto/config/certs/ca/ca.crt',
+      mosquittoPublicKey: '/mosquitto/config/certs/mosquitto/tls.crt',
+      brokerPublicKey: '/mosquitto/config/certs/broker-agent/tls.crt',
+    },
+    mqttClientId: 'mqttctl-compose-admin',
+  },
+}

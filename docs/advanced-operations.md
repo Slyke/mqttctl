@@ -9,7 +9,7 @@ This guide documents the implementation that is checked into the repo today.
   - `MQTTCTL_SECRETS_PATH`
 - The broker-agent reads:
   - `MQTTCTL_BROKER_AGENT_CONFIG_PATH`
-- Those JSON files are bootstrap-only:
+- The control-plane files are JSON5; the broker-agent file is JSON. They are bootstrap-only:
   - the app never rewrites them
   - you must restart the process after changing them
 - SQLite is the default DB mode:
@@ -144,7 +144,7 @@ Managed key-file behavior:
   - `mosquittoPublicKey`
   - `brokerPublicKey`
 - private keys are never exposed
-- if broker-agent is enabled but does not implement `/broker-key-files`, the control plane falls back to reporting configured metadata from its own config JSON
+- if broker-agent is enabled but does not implement `/broker-key-files`, the control plane falls back to reporting configured metadata from its own config JSON5
 
 ## Dashboard and Health
 
@@ -251,7 +251,7 @@ Current import behavior:
 
 ## Logging Overrides
 
-The control plane supports deploy-time sink overrides on top of config JSON:
+The control plane supports deploy-time sink overrides on top of config JSON5:
 
 - console:
   - `MQTTCTL_LOG_CONSOLE_ENABLED`
@@ -281,7 +281,7 @@ Kubernetes metadata injection for logs is also available:
   - `K8S_POD_IP`
   - `K8S_POD_IPS`
   - `K8S_NODE_NAME`
-- the control plane also accepts the same defaults in config JSON under `logging.kubernetes.*`
+- the control plane also accepts the same defaults in config JSON5 under `logging.kubernetes.*`
 - when enabled, JSON logs include a `kubernetes` object and text logs append `| kubernetes=...`
 
 Broker-agent logging is still console-oriented:

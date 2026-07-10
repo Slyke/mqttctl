@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import JSON5 from 'json5';
 import { configSchema, secretsSchema, type RuntimeConfig, type RuntimeSecrets } from '$server/config/schema';
 import { createAppError } from '$server/logging/errors';
 
@@ -10,14 +11,14 @@ export interface LoadedRuntimeConfig {
   uiOverrideCssPath: string | null;
 }
 
-const readJsonFile = async ({ filePath, errorKey, correlationId }: { filePath: string; errorKey: string; correlationId: string | null }) => {
+const readJson5File = async ({ filePath, errorKey, correlationId }: { filePath: string; errorKey: string; correlationId: string | null }) => {
   try {
     const text = await readFile(filePath, 'utf8');
-    return JSON.parse(text);
+    return JSON5.parse(text);
   } catch (error) {
     throw createAppError({
       caller: 'config::load',
-      reason: `Failed loading JSON from ${filePath}`,
+      reason: `Failed loading JSON5 from ${filePath}`,
       errorKey,
       correlationId,
       context: { filePath },
@@ -44,15 +45,15 @@ export const loadRuntimeConfig = async ({ correlationId = null }: { correlationI
   }
 
   const [rawConfig, rawSecrets] = await Promise.all([
-    readJsonFile({ filePath: configPath, errorKey: 'CONFIG_LOAD_FAILED', correlationId }),
-    readJsonFile({ filePath: secretsPath, errorKey: 'CONFIG_LOAD_FAILED', correlationId })
+    readJson5File({ filePath: configPath, errorKey: 'CONFIG_LOAD_FAILED', correlationId }),
+    readJson5File({ filePath: secretsPath, errorKey: 'CONFIG_LOAD_FAILED', correlationId })
   ]);
 
   const configResult = configSchema.safeParse(rawConfig);
   if (!configResult.success) {
     throw createAppError({
       caller: 'config::load',
-      reason: 'Config JSON failed validation.',
+      reason: 'Config JSON5 failed validation.',
       errorKey: 'CONFIG_VALIDATION_FAILED',
       correlationId,
       context: configResult.error.flatten()
@@ -63,7 +64,7 @@ export const loadRuntimeConfig = async ({ correlationId = null }: { correlationI
   if (!secretsResult.success) {
     throw createAppError({
       caller: 'config::load',
-      reason: 'Secrets JSON failed validation.',
+      reason: 'Secrets JSON5 failed validation.',
       errorKey: 'CONFIG_VALIDATION_FAILED',
       correlationId,
       context: secretsResult.error.flatten()

@@ -46,27 +46,27 @@ Full gallery: [Dashboard](./docs/images/1_dashboard.png), [App Users](./docs/ima
 Copy the local-auth samples into the filenames that compose actually mounts:
 
 ```bash
-cp config/compose/gui-api/mqttctl.config.example-localauth.json config/compose/gui-api/mqttctl.config.json
-cp config/compose/gui-api/mqttctl.secrets.example-localauth.json config/compose/gui-api/mqttctl.secrets.json
+cp config/compose/gui-api/mqttctl.config.example-localauth.json5 config/compose/gui-api/mqttctl.config.json5
+cp config/compose/gui-api/mqttctl.secrets.example-localauth.json5 config/compose/gui-api/mqttctl.secrets.json5
 docker compose up --build
 ```
 
-Then open `http://localhost:3000` and sign in with the bootstrap credentials you placed in `config/compose/gui-api/mqttctl.secrets.json`. The checked-in defaults live in [`config/compose/gui-api/mqttctl.secrets.example-localauth.json`](./config/compose/gui-api/mqttctl.secrets.example-localauth.json).
+Then open `http://localhost:3000` and sign in with the bootstrap credentials you placed in `config/compose/gui-api/mqttctl.secrets.json5`. The checked-in defaults live in [`config/compose/gui-api/mqttctl.secrets.example-localauth.json5`](./config/compose/gui-api/mqttctl.secrets.example-localauth.json5).
 
 ### Common Next Steps
 
-- OIDC: start from [`config/compose/gui-api/mqttctl.config.example-oidc-localauth.json`](./config/compose/gui-api/mqttctl.config.example-oidc-localauth.json) and [`config/compose/gui-api/mqttctl.secrets.example-oidc.json`](./config/compose/gui-api/mqttctl.secrets.example-oidc.json), then restart the app
+- OIDC: start from [`config/compose/gui-api/mqttctl.config.example-oidc-localauth.json5`](./config/compose/gui-api/mqttctl.config.example-oidc-localauth.json5) and [`config/compose/gui-api/mqttctl.secrets.example-oidc.json5`](./config/compose/gui-api/mqttctl.secrets.example-oidc.json5), then restart the app
 - Trusted-header auth: add `auth.headerEnabled`, `auth.header.trustedCidrs`, `auth.header.usernameHeader`, and `auth.header.defaultRole`; details are in [`docs/getting-started.md`](./docs/getting-started.md)
 - TLS for Mosquitto or broker-agent HTTPS: follow [`docs/CERTS.md`](./docs/CERTS.md)
 
 ## Runtime Model
 
-- The control plane reads exactly two JSON files at startup:
+- The control plane reads exactly two JSON5 files at startup:
   - `MQTTCTL_CONFIG_PATH`
   - `MQTTCTL_SECRETS_PATH`
 - The broker-agent reads one JSON file at startup:
   - `MQTTCTL_BROKER_AGENT_CONFIG_PATH`
-- Those JSON files are bootstrap-only inputs:
+- Those runtime files are bootstrap-only inputs:
   - the app treats them as read-only
   - changes require a process restart to take effect
 - SQLite is the default DB mode:
@@ -74,8 +74,8 @@ Then open `http://localhost:3000` and sign in with the bootstrap credentials you
   - `MQTTCTL_SQLITE_PATH=/path/to/mqttctl.sqlite`
 - Postgres is optional:
   - set `MQTTCTL_DB_KIND=postgres`
-  - keep `config.database.postgres` in config JSON
-  - keep `secrets.postgresPassword` in secrets JSON
+  - keep `config.database.postgres` in config JSON5
+  - keep `secrets.postgresPassword` in secrets JSON5
 - `MQTTCTL_UI_OVERRIDE_CSS_PATH` exposes instance-specific CSS through `/instance-overrides.css`
 - `MQTTCTL_LOG_*` env vars can override the configured logging sinks at deploy time
 - `MQTTCTL_LOG_K8S_METADATA_ENABLED` or `LOG_K8S_METADATA_ENABLED`, plus `K8S_*` metadata env vars, can attach Kubernetes metadata to each log entry
@@ -90,10 +90,10 @@ Control-plane builds generate a build label in the form `v<version>-<commit>`. T
 
 Control-plane samples:
 
-- [`config/compose/gui-api/mqttctl.config.example-localauth.json`](./config/compose/gui-api/mqttctl.config.example-localauth.json)
-- [`config/compose/gui-api/mqttctl.config.example-oidc-localauth.json`](./config/compose/gui-api/mqttctl.config.example-oidc-localauth.json)
-- [`config/compose/gui-api/mqttctl.secrets.example-localauth.json`](./config/compose/gui-api/mqttctl.secrets.example-localauth.json)
-- [`config/compose/gui-api/mqttctl.secrets.example-oidc.json`](./config/compose/gui-api/mqttctl.secrets.example-oidc.json)
+- [`config/compose/gui-api/mqttctl.config.example-localauth.json5`](./config/compose/gui-api/mqttctl.config.example-localauth.json5)
+- [`config/compose/gui-api/mqttctl.config.example-oidc-localauth.json5`](./config/compose/gui-api/mqttctl.config.example-oidc-localauth.json5)
+- [`config/compose/gui-api/mqttctl.secrets.example-localauth.json5`](./config/compose/gui-api/mqttctl.secrets.example-localauth.json5)
+- [`config/compose/gui-api/mqttctl.secrets.example-oidc.json5`](./config/compose/gui-api/mqttctl.secrets.example-oidc.json5)
 - [`config/compose/gui-api/custom.css`](./config/compose/gui-api/custom.css)
 
 Broker-agent and Mosquitto samples:
@@ -157,36 +157,47 @@ Default local endpoints:
 
 ## Image Publishing
 
-Broker-agent image:
-
-```bash
-SHA=$(git rev-parse --short=12 HEAD)
-VERSION=v0.0.X
-
-docker build -t mqttctl-broker-agent:build -f ./dockerfiles/broker-agent.Dockerfile .
-
-for TAG in latest "$VERSION" "$VERSION-$SHA"; do
-  docker tag mqttctl-broker-agent:build "yourusername/mqttctl-broker-agent:$TAG"
-  docker tag mqttctl-broker-agent:build "yourdomain.xyz/yourusername/mqttctl-broker-agent:$TAG"
-  docker push "yourusername/mqttctl-broker-agent:$TAG"
-  docker push "yourdomain.xyz/yourusername/mqttctl-broker-agent:$TAG"
-done
-
-```
-
 Control-plane image:
 
 ```bash
-SHA=$(git rev-parse --short=12 HEAD)
+USERNAME=YOURUSERNAME
+DOMAIN=yourdomain.xyz
 VERSION=v0.0.X
+git tag -a "$VERSION" -m "$VERSION"
+# git tag -f -a "$VERSION" -m "$VERSION"
+# git push --force origin "$VERSION"
+
+SHA=$(git rev-parse --short=12 HEAD)
 
 docker build -t mqttctl:build -f ./dockerfiles/mqttctl.Dockerfile .
 
 for TAG in latest "$VERSION" "$VERSION-$SHA"; do
-  docker tag mqttctl:build "yourusername/mqttctl:$TAG"
-  docker tag mqttctl:build "yourdomain.xyz/yourusername/mqttctl:$TAG"
-  docker push "yourusername/mqttctl:$TAG"
-  docker push "yourdomain.xyz/yourusername/mqttctl:$TAG"
+  docker tag mqttctl:build "$USERNAME/mqttctl:$TAG"
+  docker tag mqttctl:build "$DOMAIN/$USERNAME/mqttctl:$TAG"
+  docker push "$USERNAME/mqttctl:$TAG" # Dockerhub
+  docker push "$DOMAIN/$USERNAME/mqttctl:$TAG" # Custom
+done
+```
+
+Broker-agent image:
+
+```bash
+USERNAME=YOURUSERNAME
+DOMAIN=yourdomain.xyz
+VERSION=v0.0.X
+git tag -a "$VERSION" -m "$VERSION"
+# git tag -f -a "$VERSION" -m "$VERSION"
+# git push --force origin "$VERSION"
+
+SHA=$(git rev-parse --short=12 HEAD)
+
+docker build -t mqttctl-broker-agent:build -f ./dockerfiles/broker-agent.Dockerfile .
+
+for TAG in latest "$VERSION" "$VERSION-$SHA"; do
+  docker tag mqttctl-broker-agent:build "$USERNAME/mqttctl-broker-agent:$TAG"
+  docker tag mqttctl-broker-agent:build "$DOMAIN/$USERNAME/mqttctl-broker-agent:$TAG"
+  docker push "$USERNAME/mqttctl-broker-agent:$TAG" # Dockerhub
+  docker push "$DOMAIN/$USERNAME/mqttctl-broker-agent:$TAG" # Custom
 done
 ```
 

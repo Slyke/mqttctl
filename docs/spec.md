@@ -176,10 +176,10 @@ The app must not silently drift these boundaries.
 
 ### Config Files
 
-The app loads exactly two JSON files at startup:
+The control plane loads exactly two JSON5 files at startup:
 
-- `config` JSON
-- `secrets` JSON
+- `config` JSON5
+- `secrets` JSON5
 
 Both file paths are supplied via env vars. Both files are read-only to the application and require a full application reload to take effect.
 
@@ -205,7 +205,7 @@ Both file paths are supplied via env vars. Both files are read-only to the appli
 
 - SQLite is the default single-node option.
 - SQLite file path comes from an env var.
-- Postgres connection details live in config JSON, except secrets which live in secrets JSON.
+- Postgres connection details live in config JSON5, except secrets which live in secrets JSON5.
 - First run should preseed required records and defaults.
 
 ## RBAC

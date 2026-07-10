@@ -21,6 +21,8 @@ var
 data
 config/compose/runtime
 config/compose/gui-api/mqttctl.config.json
+config/compose/gui-api/mqttctl.config.json5
 *.secrets.json
+*.secrets.json5
 config/nginx-dev-proxy/certs/*.pem
 local.readme.md
