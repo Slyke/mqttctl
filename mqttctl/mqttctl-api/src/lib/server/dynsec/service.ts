@@ -294,6 +294,28 @@ const normalizeClientDefaults = ({ value }: { value: unknown }): DynsecClientDef
   };
 };
 
+const summarizeCredentialValue = ({ value }: { value: unknown }) => {
+  if (typeof value !== 'string' || value.length <= 12) return redactedToken;
+  return `${value.slice(0, 6)}...${value.slice(-6)}`;
+};
+
+const sanitizeDynsecCredentialFields = ({ value }: { value: unknown }): unknown => {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeDynsecCredentialFields({ value: entry }));
+  }
+
+  if (!value || typeof value !== 'object') return value;
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => [
+      key,
+      key === 'password' || key === 'salt'
+        ? summarizeCredentialValue({ value: entry })
+        : sanitizeDynsecCredentialFields({ value: entry })
+    ])
+  );
+};
+
 const normalizeState = ({ raw }: { raw: Record<string, unknown> }): DynsecState => {
   const parsedClients = Array.isArray(raw.clients)
     ? raw.clients.map((entry) => {
@@ -1133,7 +1155,7 @@ export class DynsecService {
       inheritedGroups,
       mergedAcls: effectiveAcls,
       warnings: [...warnings],
-      raw: state.raw
+      raw: sanitizeDynsecCredentialFields({ value: state.raw })
     };
   }
 

@@ -138,7 +138,7 @@ MQTTCtl MCP image, from the repository root:
 ```bash
 USERNAME=YOURUSERNAME
 DOMAIN=yourdomain.xyz
-VERSION=v0.0.6
+VERSION=v0.0.7
 git tag -a "$VERSION" -m "$VERSION"
 # git tag -f -a "$VERSION" -m "$VERSION"
 # git push --force origin "$VERSION"

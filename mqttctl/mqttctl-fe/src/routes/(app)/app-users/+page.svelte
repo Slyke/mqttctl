@@ -159,57 +159,6 @@
     <div class="badge tone-danger">{error}</div>
   {/if}
 
-  {#if data.canManageMcp && data.mcpConfigured && data.mcpAccess}
-    <article class="panel stack">
-      <div>
-        <h2>MCP Access</h2>
-        <p class="muted">Control the passwordless MCP service identity. Its username, role, and authentication source are fixed.</p>
-      </div>
-      <form class="stack" on:submit|preventDefault={(event) => updateMcpAccess(event.currentTarget as HTMLFormElement)}>
-        <div class="form-grid app-user-grid">
-          <label class="stack-tight">
-            <span class="muted">Username</span>
-            <input value={data.mcpAccess.username} disabled />
-          </label>
-          <label class="stack-tight">
-            <span class="muted">Role</span>
-            <input value={formatDisplayCode(data.mcpAccess.role)} disabled />
-          </label>
-          <label class="stack-tight">
-            <span class="muted">Authentication</span>
-            <input value={formatDisplayCode(data.mcpAccess.authSource)} disabled />
-          </label>
-          <label class="stack-tight">
-            <span class="muted">Password</span>
-            <input value="No password" disabled />
-          </label>
-        </div>
-        <fieldset class="mcp-capabilities stack-tight">
-          <legend>Allowed capabilities</legend>
-          <div class="mcp-capability-grid">
-            {#each data.mcpAccess.defaultCapabilities as capability}
-              <label class="mcp-capability-option">
-                <input
-                  type="checkbox"
-                  name={`capability:${capability}`}
-                  checked={data.mcpAccess.allowedCapabilities.includes(capability)}
-                />
-                <span>{formatDisplayCode(capability)}</span>
-              </label>
-            {/each}
-          </div>
-        </fieldset>
-        <div class="app-user-footer">
-          <label class="app-user-status">
-            <span class="muted">Disabled</span>
-            <input name="disabled" type="checkbox" checked={data.mcpAccess.disabled} />
-          </label>
-          <button class="button-mid" type="submit">Save MCP Access</button>
-        </div>
-      </form>
-    </article>
-  {/if}
-
   <article class="panel stack">
     <h2>Create User</h2>
     <form class="form-grid" on:submit|preventDefault={createUser}>
@@ -240,6 +189,59 @@
       </div>
     </form>
   </article>
+
+  {#if data.canManageMcp && data.mcpConfigured && data.mcpAccess}
+    <details class="panel mcp-access-accordion">
+      <summary class="mcp-access-summary">
+        <h2>MCP Access</h2>
+      </summary>
+      <div class="stack mcp-access-content">
+        <p class="muted">Control the passwordless MCP service identity. Its username, role, and authentication source are fixed.</p>
+        <form class="stack" on:submit|preventDefault={(event) => updateMcpAccess(event.currentTarget as HTMLFormElement)}>
+          <div class="form-grid app-user-grid">
+            <label class="stack-tight">
+              <span class="muted">Username</span>
+              <input value={data.mcpAccess.username} disabled />
+            </label>
+            <label class="stack-tight">
+              <span class="muted">Role</span>
+              <input value={formatDisplayCode(data.mcpAccess.role)} disabled />
+            </label>
+            <label class="stack-tight">
+              <span class="muted">Authentication</span>
+              <input value={formatDisplayCode(data.mcpAccess.authSource)} disabled />
+            </label>
+            <label class="stack-tight">
+              <span class="muted">Password</span>
+              <input value="No password" disabled />
+            </label>
+          </div>
+          <fieldset class="mcp-capabilities stack-tight">
+            <legend>Allowed capabilities</legend>
+            <div class="mcp-capability-grid">
+              {#each data.mcpAccess.defaultCapabilities as capability}
+                <label class="mcp-capability-option">
+                  <input
+                    type="checkbox"
+                    name={`capability:${capability}`}
+                    checked={data.mcpAccess.allowedCapabilities.includes(capability)}
+                  />
+                  <span>{formatDisplayCode(capability)}</span>
+                </label>
+              {/each}
+            </div>
+          </fieldset>
+          <div class="app-user-footer">
+            <label class="app-user-status">
+              <span class="muted">Disabled</span>
+              <input name="disabled" type="checkbox" checked={data.mcpAccess.disabled} />
+            </label>
+            <button class="button-mid" type="submit">Save MCP Access</button>
+          </div>
+        </form>
+      </div>
+    </details>
+  {/if}
 
   <article class="panel stack">
     <h2>Users</h2>
@@ -360,6 +362,24 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
+  }
+
+  .mcp-access-accordion {
+    padding: 0;
+  }
+
+  .mcp-access-summary {
+    cursor: pointer;
+    padding: var(--space-4);
+  }
+
+  .mcp-access-summary h2 {
+    display: inline;
+  }
+
+  .mcp-access-content {
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-4);
   }
 
   @media (max-width: 820px) {

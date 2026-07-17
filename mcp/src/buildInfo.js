@@ -4,10 +4,10 @@ export const getBuildInfo = () => {
   try {
     const parsed = JSON.parse(fs.readFileSync(new URL("../build-info.json", import.meta.url), "utf8"));
     return {
-      version: String(parsed.version ?? "0.0.6"),
+      version: String(parsed.version ?? "0.0.7"),
       buildHash: String(parsed.buildHash ?? "development")
     };
   } catch {
-    return { version: "0.0.6", buildHash: "development" };
+    return { version: "0.0.7", buildHash: "development" };
   }
 };
