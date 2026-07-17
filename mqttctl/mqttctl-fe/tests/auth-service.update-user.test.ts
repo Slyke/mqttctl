@@ -96,7 +96,8 @@ const createDb = () => ({
   deleteSessionsForUser: vi.fn(),
   getUserByExternalSubject: vi.fn(),
   getUserByUsername: vi.fn(),
-  createUser: vi.fn()
+  createUser: vi.fn(),
+  deleteUser: vi.fn()
 });
 
 describe('AuthService user update rules', () => {
@@ -177,7 +178,7 @@ describe('AuthService user update rules', () => {
     await expect(service.updateUser({
       userId: existing.id,
       email: existing.email,
-      role: existing.role,
+      role: existing.role === 'mcp' ? 'viewer' : existing.role,
       disabled: false,
       password: 'next-password',
       correlationId: 'corr-3'
@@ -219,5 +220,76 @@ describe('AuthService user update rules', () => {
       sessionVersion: existing.sessionVersion + 1
     }));
     expect(db.deleteSessionsForUser).toHaveBeenCalledWith({ userId: existing.id });
+  });
+
+  it('rejects ordinary edits and deletion of the protected MCP system user', async () => {
+    const db = createDb();
+    const existing = createStoredUser({
+      id: 'system:mcp',
+      username: 'mcp',
+      email: null,
+      role: 'mcp',
+      authSource: 'mcp',
+      passwordHash: null,
+      protectedFromAutoLink: true
+    });
+    db.getUserById.mockResolvedValue(existing);
+    const service = new AuthService(db as never, createRuntimeConfig(), createLogger(), createAudit());
+
+    await expect(service.updateUser({
+      userId: existing.id,
+      email: null,
+      role: 'viewer',
+      disabled: true,
+      password: null,
+      correlationId: 'corr-mcp-protected'
+    })).rejects.toMatchObject({ errorKey: 'MCP_AUTH_SYSTEM_USER_PROTECTED', status: 403 });
+
+    await expect(service.deleteUser({
+      userId: existing.id,
+      correlationId: 'corr-mcp-delete'
+    })).rejects.toMatchObject({ errorKey: 'MCP_AUTH_SYSTEM_USER_PROTECTED', status: 403 });
+    expect(db.updateUser).not.toHaveBeenCalled();
+    expect(db.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('prevents the MCP principal from creating, modifying, or deleting a superadmin', async () => {
+    const db = createDb();
+    const superadmin = createStoredUser({ role: 'super_admin' });
+    db.getUserByUsername.mockResolvedValue(null);
+    db.getUserById.mockResolvedValue(superadmin);
+    const service = new AuthService(db as never, createRuntimeConfig(), createLogger(), createAudit());
+    const actor = {
+      id: 'system:mcp',
+      username: 'mcp',
+      email: null,
+      role: 'mcp' as const,
+      authSource: 'mcp' as const,
+      delegatedIdentity: { clientName: 'writer', access: 'readwrite' as const }
+    };
+
+    await expect(service.createUser({
+      username: 'new-admin',
+      password: 'password',
+      role: 'super_admin',
+      correlationId: 'corr-mcp-create-admin',
+      actor
+    })).rejects.toMatchObject({ errorKey: 'MCP_AUTH_SUPERADMIN_MUTATION_DENIED', status: 403 });
+
+    await expect(service.updateUser({
+      userId: superadmin.id,
+      email: superadmin.email,
+      role: 'super_admin',
+      disabled: false,
+      password: null,
+      correlationId: 'corr-mcp-update-admin',
+      actor
+    })).rejects.toMatchObject({ errorKey: 'MCP_AUTH_SUPERADMIN_MUTATION_DENIED', status: 403 });
+
+    await expect(service.deleteUser({
+      userId: superadmin.id,
+      correlationId: 'corr-mcp-delete-admin',
+      actor
+    })).rejects.toMatchObject({ errorKey: 'MCP_AUTH_SUPERADMIN_MUTATION_DENIED', status: 403 });
   });
 });

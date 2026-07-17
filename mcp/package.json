@@ -1,0 +1,27 @@
+{
+  "name": "mqttctl-mcp",
+  "version": "0.1.0",
+  "description": "Stateful MCP server for the mqttctl HTTP API.",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "keygen": "node scripts/generate-signing-keypair.mjs",
+    "build-info": "node scripts/write-build-info.mjs",
+    "test": "node --test",
+    "check": "node --check src/index.js && node scripts/error-gen.mjs --action validate && node --test",
+    "error-add": "node scripts/error-gen.mjs --action add",
+    "error-delete": "node scripts/error-gen.mjs --action delete",
+    "error-validate": "node scripts/error-gen.mjs --action validate"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "json5": "^2.2.3",
+    "undici": "^7.16.0",
+    "zod": "^3.25.76"
+  }
+}

@@ -23,7 +23,8 @@ export const PATCH = async (event) => {
     await event.locals.appContext.auth.updateUser({
       userId: event.params.id,
       ...payload,
-      correlationId: event.locals.correlationId
+      correlationId: event.locals.correlationId,
+      actor: event.locals.currentUser
     });
 
     await event.locals.appContext.audit.record({
@@ -54,7 +55,11 @@ export const DELETE = async (event) => {
       correlationId: event.locals.correlationId
     });
 
-    await event.locals.appContext.auth.deleteUser({ userId: event.params.id });
+    await event.locals.appContext.auth.deleteUser({
+      userId: event.params.id,
+      correlationId: event.locals.correlationId,
+      actor: event.locals.currentUser
+    });
     await event.locals.appContext.audit.record({
       actor: event.locals.currentUser,
       authMode: event.locals.currentUser?.authSource ?? null,
@@ -72,4 +77,3 @@ export const DELETE = async (event) => {
     return handleApiError({ event, error });
   }
 };
-

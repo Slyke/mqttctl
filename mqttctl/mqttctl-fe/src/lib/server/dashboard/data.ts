@@ -1,4 +1,4 @@
-import type { DiagnosticsSummary } from '$types';
+import type { DiagnosticsSummary, McpRuntimeInfo } from '$types';
 import type { AuthenticatedUser } from '$server/auth/types';
 import type { AppContext } from '$server/context';
 import { AppError } from '$server/logging/errors';
@@ -13,6 +13,7 @@ interface DashboardDynsecCounts {
 
 export interface DashboardPageData extends Record<string, unknown> {
   diagnostics: DiagnosticsSummary;
+  mcpRuntime: McpRuntimeInfo;
   uiTransport: {
     label: string;
     security: 'tls' | 'unencrypted';
@@ -70,13 +71,14 @@ export const loadDashboardPageData = async ({
     capability: 'view_audit'
   });
 
-  const [diagnostics, users, auditEntries] = await Promise.all([
-    loadDashboardDiagnostics({ appContext, correlationId }),
+  const [snapshot, users, auditEntries] = await Promise.all([
+    refreshDashboardSnapshot({ appContext, correlationId }),
     appContext.auth.listUsers(),
     canViewAudit
       ? appContext.db.listAuditEntries({ limit: 5 })
       : Promise.resolve([])
   ]);
+  const { diagnostics, mcpRuntime } = snapshot;
 
   let dynsecCounts = unavailableDynsecCounts;
   const brokerAgentConfigured = appContext.brokerAgent.isConfigured();
@@ -109,6 +111,7 @@ export const loadDashboardPageData = async ({
 
   return {
     diagnostics,
+    mcpRuntime,
     uiTransport: {
       label: 'WUI to API',
       security: appContext.runtimeConfig.config.publicBaseUrl.startsWith('https://') ? 'tls' : 'unencrypted'

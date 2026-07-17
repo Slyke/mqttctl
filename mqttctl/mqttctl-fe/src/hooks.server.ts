@@ -5,6 +5,7 @@ import { AppError, toErrorBody } from '$server/logging/errors';
 import { getSourceIp } from '$server/http';
 import frontendErrorCatalog from './errors.json';
 import { handleHttpApiProxy } from '$lib/server/http-api-proxy';
+import type { AuthenticatedUser } from '$server/auth/types';
 
 const frontendErrors = frontendErrorCatalog as Record<string, string>;
 const eagerSsrRelativeFetchPattern = 'Cannot call `fetch` eagerly during server-side rendering with relative URL';
@@ -81,14 +82,33 @@ export const handle: Handle = async ({ event, resolve }) => {
   const cookieValue = event.cookies.get(appContext.auth.getSessionCookieName());
   const sourceIp = getSourceIp({ event });
 
-  const sessionUser = await appContext.auth.getUserFromCookie({ cookieValue });
-  const headerUser = sessionUser ?? await appContext.auth.authenticateTrustedHeaders({
+  let mcpUser: AuthenticatedUser | null;
+  try {
+    mcpUser = await appContext.mcpAuth.authenticateRequest({
+      request: event.request,
+      correlationId
+    });
+  } catch (error) {
+    if (error instanceof AppError) {
+      const response = new Response(JSON.stringify(toErrorBody({ error })), {
+        status: error.status,
+        headers: {
+          'content-type': 'application/json',
+          'x-correlation-id': correlationId
+        }
+      });
+      return response;
+    }
+    throw error;
+  }
+  const sessionUser = mcpUser ? null : await appContext.auth.getUserFromCookie({ cookieValue });
+  const headerUser = sessionUser || mcpUser ? null : await appContext.auth.authenticateTrustedHeaders({
     sourceIp,
     headers: event.request.headers,
     correlationId
   });
 
-  event.locals.currentUser = sessionUser ?? headerUser;
+  event.locals.currentUser = sessionUser ?? mcpUser ?? headerUser;
 
   const response = await handleHttpApiProxy({ event, resolve });
   response.headers.set('x-correlation-id', correlationId);

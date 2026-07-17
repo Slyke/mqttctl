@@ -464,7 +464,9 @@ export class AuthService {
 
   async listUsers() {
     const users = await this.db.listUsers();
-    return users.map(({ passwordHash: _passwordHash, ...user }) => user);
+    return users
+      .filter((user) => user.authSource !== 'mcp')
+      .map(({ passwordHash: _passwordHash, ...user }) => user);
   }
 
   async createUser({
@@ -474,8 +476,9 @@ export class AuthService {
     role,
     authSource = 'local',
     externalSubject = null,
-    correlationId
-  }: CreateUserInput & { correlationId: string | null }) {
+    correlationId,
+    actor = null
+  }: CreateUserInput & { correlationId: string | null; actor?: AuthenticatedUser | null }) {
     const normalizedUsername = normalizeUsername({ username });
     const existing = await this.db.getUserByUsername({ username: normalizedUsername });
     if (existing) {
@@ -485,6 +488,26 @@ export class AuthService {
         errorKey: 'USER_CREATE_FAILED',
         correlationId,
         status: 409
+      });
+    }
+
+    if (authSource === 'mcp') {
+      throw createAppError({
+        caller: 'auth::createUser',
+        reason: 'The reserved MCP system user cannot be created through ordinary user flows.',
+        errorKey: 'MCP_AUTH_SYSTEM_USER_PROTECTED',
+        correlationId,
+        status: 403
+      });
+    }
+
+    if (actor?.role === 'mcp' && role === 'super_admin') {
+      throw createAppError({
+        caller: 'auth::createUser',
+        reason: 'The MCP user cannot create or promote a superadmin.',
+        errorKey: 'MCP_AUTH_SUPERADMIN_MUTATION_DENIED',
+        correlationId,
+        status: 403
       });
     }
 
@@ -531,7 +554,8 @@ export class AuthService {
     role,
     disabled,
     password,
-    correlationId
+    correlationId,
+    actor = null
   }: {
     userId: string;
     email: string | null;
@@ -539,6 +563,7 @@ export class AuthService {
     disabled: boolean;
     password: string | null;
     correlationId: string | null;
+    actor?: AuthenticatedUser | null;
   }) {
     const existing = await this.db.getUserById({ userId });
     if (!existing) {
@@ -548,6 +573,26 @@ export class AuthService {
         errorKey: 'USER_UPDATE_FAILED',
         correlationId,
         status: 404
+      });
+    }
+
+    if (existing.authSource === 'mcp') {
+      throw createAppError({
+        caller: 'auth::updateUser',
+        reason: 'The reserved MCP system user can only be changed through MCP Access controls.',
+        errorKey: 'MCP_AUTH_SYSTEM_USER_PROTECTED',
+        correlationId,
+        status: 403
+      });
+    }
+
+    if (actor?.role === 'mcp' && (existing.role === 'super_admin' || role === 'super_admin')) {
+      throw createAppError({
+        caller: 'auth::updateUser',
+        reason: 'The MCP user cannot modify or promote a superadmin.',
+        errorKey: 'MCP_AUTH_SUPERADMIN_MUTATION_DENIED',
+        correlationId,
+        status: 403
       });
     }
 
@@ -601,7 +646,46 @@ export class AuthService {
     }
   }
 
-  async deleteUser({ userId }: { userId: string }) {
+  async deleteUser({
+    userId,
+    correlationId,
+    actor = null
+  }: {
+    userId: string;
+    correlationId: string | null;
+    actor?: AuthenticatedUser | null;
+  }) {
+    const existing = await this.db.getUserById({ userId });
+    if (!existing) {
+      throw createAppError({
+        caller: 'auth::deleteUser',
+        reason: 'User not found.',
+        errorKey: 'USER_DELETE_FAILED',
+        correlationId,
+        status: 404
+      });
+    }
+
+    if (existing.authSource === 'mcp') {
+      throw createAppError({
+        caller: 'auth::deleteUser',
+        reason: 'The reserved MCP system user cannot be deleted.',
+        errorKey: 'MCP_AUTH_SYSTEM_USER_PROTECTED',
+        correlationId,
+        status: 403
+      });
+    }
+
+    if (actor?.role === 'mcp' && existing.role === 'super_admin') {
+      throw createAppError({
+        caller: 'auth::deleteUser',
+        reason: 'The MCP user cannot delete a superadmin.',
+        errorKey: 'MCP_AUTH_SUPERADMIN_MUTATION_DENIED',
+        correlationId,
+        status: 403
+      });
+    }
+
     await this.db.deleteUser({ userId });
   }
 
@@ -774,6 +858,16 @@ export class AuthService {
     userAgent: string | null;
     correlationId: string | null;
   }) {
+    if (user.authSource === 'mcp' || user.role === 'mcp' || authMethod === 'mcp') {
+      throw createAppError({
+        caller: 'auth::createSessionForUser',
+        reason: 'The MCP system user cannot create an interactive login session.',
+        errorKey: 'MCP_AUTH_SYSTEM_USER_PROTECTED',
+        correlationId,
+        status: 403
+      });
+    }
+
     const sessionId = createOpaqueToken({ bytes: 32 });
     const expiresAt = new Date(Date.now() + (this.runtimeConfig.config.auth.sessionTtlMinutes * 60_000)).toISOString();
     const now = new Date().toISOString();
@@ -844,6 +938,8 @@ export class AuthService {
     if (
       !user
       || user.disabled
+      || user.authSource === 'mcp'
+      || user.role === 'mcp'
       || user.sessionVersion !== session.sessionVersion
     ) {
       await this.db.deleteSession({ sessionId });

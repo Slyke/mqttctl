@@ -1,6 +1,6 @@
 import { handleApiError } from '$server/http';
 import { requireMqttSessionUser } from '$lib/server/mqtt/access';
-import type { MqttExplorerState } from '$lib/types';
+import type { MqttExplorerState, MqttLatestMessage } from '$lib/types';
 
 export const GET = async (event) => {
   try {
@@ -16,16 +16,36 @@ export const GET = async (event) => {
           if (closed) return;
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ explorer })}\n\n`));
         };
+        const sendMessage = (message: MqttLatestMessage) => {
+          if (closed) return;
+          controller.enqueue(encoder.encode(`event: mqtt-message\ndata: ${JSON.stringify({ message })}\n\n`));
+        };
 
         cleanup = event.locals.appContext.mqtt.watchSession({
           sessionKey,
           correlationId: event.locals.correlationId,
-          listener: send
+          listener: send,
+          messageListener: sendMessage
         });
 
         heartbeat = setInterval(() => {
           if (closed) return;
-          controller.enqueue(encoder.encode(': ping\n\n'));
+          void (async () => {
+            try {
+              if (event.locals.currentUser?.role === 'mcp') {
+                await event.locals.appContext.mcpAuth.assertPrincipalEnabled({
+                  correlationId: event.locals.correlationId
+                });
+              }
+              if (!closed) controller.enqueue(encoder.encode(': ping\n\n'));
+            } catch {
+              if (closed) return;
+              closed = true;
+              if (heartbeat) clearInterval(heartbeat);
+              cleanup();
+              controller.close();
+            }
+          })();
         }, 15_000);
 
         event.request.signal.addEventListener('abort', () => {

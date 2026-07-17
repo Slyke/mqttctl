@@ -1,0 +1,49 @@
+{
+  readOnly: false,
+  auth: {
+    readBearerTokens: [
+      { name: 'read-agent', tokenFile: '/run/secrets/mcp-read-token' },
+    ],
+    readWriteBearerTokens: [
+      { name: 'automation-agent', tokenFile: '/run/secrets/mcp-readwrite-token' },
+    ],
+  },
+  http: {
+    enabled: false,
+    host: '0.0.0.0',
+    port: 3001,
+  },
+  https: {
+    enabled: true,
+    host: '0.0.0.0',
+    port: 3443,
+    certsDir: './data/certs',
+  },
+  mqttctl: {
+    baseUrl: 'http://mqttctl:3000',
+    privateKeyFile: '/run/mqttctl-mcp-private/signing-private.pem',
+    keyId: 'compose',
+    audience: 'mqttctl-api',
+    timeoutMs: 15000,
+    verifyTls: true,
+    readyCheck: true,
+    heartbeatSeconds: 15,
+  },
+  sessions: {
+    maxTotal: 100,
+    maxPerToken: 20,
+  },
+  rateLimits: {
+    windowSeconds: 60,
+    read: 300,
+    write: 120,
+    destructive: 30,
+  },
+  mqttBuffer: {
+    inactivitySeconds: 3600,
+    maxMessages: 10000,
+    maxBytes: 16777216,
+    defaultPoll: 100,
+    maxPoll: 1000,
+  },
+}

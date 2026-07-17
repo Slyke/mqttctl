@@ -39,6 +39,7 @@ interface SessionRecord {
   totalMessages: number;
   trackedTopicsLimit: number | null;
   listeners: Set<(state: MqttExplorerState) => void>;
+  messageListeners: Set<(message: MqttLatestMessage) => void>;
   pendingEmitTimer: NodeJS.Timeout | null;
   pendingSessionCloseTimer: NodeJS.Timeout | null;
 }
@@ -218,6 +219,7 @@ export class MqttExplorerService {
       totalMessages: 0,
       trackedTopicsLimit: null,
       listeners: new Set(),
+      messageListeners: new Set(),
       pendingEmitTimer: null,
       pendingSessionCloseTimer: null
     };
@@ -463,6 +465,10 @@ export class MqttExplorerService {
       currentSession.totalMessages += 1;
       currentSession.messages.set(topic, nextMessage);
 
+      for (const listener of currentSession.messageListeners) {
+        listener(nextMessage);
+      }
+
       for (const [filter, subscription] of currentSession.subscriptions.entries()) {
         if (!topicMatchesFilter({ filter, topic })) continue;
 
@@ -579,10 +585,12 @@ export class MqttExplorerService {
   watchSession({
     sessionKey,
     listener,
+    messageListener = null,
     correlationId
   }: {
     sessionKey: string;
     listener: (state: MqttExplorerState) => void;
+    messageListener?: ((message: MqttLatestMessage) => void) | null;
     correlationId: string | null;
   }) {
     const session = this.getOrCreateSession({ sessionKey });
@@ -592,6 +600,7 @@ export class MqttExplorerService {
     }
 
     session.listeners.add(listener);
+    if (messageListener) session.messageListeners.add(messageListener);
     listener(this.snapshot({ session }));
 
     return () => {
@@ -599,6 +608,7 @@ export class MqttExplorerService {
       if (!currentSession) return;
 
       currentSession.listeners.delete(listener);
+      if (messageListener) currentSession.messageListeners.delete(messageListener);
       if (currentSession.listeners.size > 0) return;
 
       if (currentSession.pendingEmitTimer) {

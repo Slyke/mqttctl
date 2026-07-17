@@ -3,6 +3,7 @@ import { loadRuntimeConfig } from '$server/config/load';
 import { createLogger, generateLog, parseLoggerOptionsFromEnv, type AppLogger } from '$server/logging/logger';
 import { AppDatabase } from '$server/db';
 import { AuthService, createMaintenanceCorrelationId } from '$server/auth/service';
+import { McpAuthService } from '$server/auth/mcp';
 import { AuditService } from '$server/audit/service';
 import { JobQueue } from '$server/jobs/queue';
 import { DynsecService } from '$server/dynsec/service';
@@ -20,6 +21,7 @@ export interface AppContext {
   buildInfo: BuildInfo;
   db: AppDatabase;
   auth: AuthService;
+  mcpAuth: McpAuthService;
   audit: AuditService;
   jobs: JobQueue;
   brokerAgent: BrokerAgentClient;
@@ -42,6 +44,7 @@ const enabledAuthModes = ({ runtimeConfig }: { runtimeConfig: LoadedRuntimeConfi
   if (runtimeConfig.config.auth.localEnabled) modes.push('local');
   if (runtimeConfig.config.auth.oidcEnabled) modes.push('oidc');
   if (runtimeConfig.config.auth.headerEnabled) modes.push('header');
+  if (runtimeConfig.config.auth.mcp.enabled) modes.push('mcp');
 
   return modes;
 };
@@ -246,6 +249,7 @@ const logStartupDiagnostics = ({
   const brokerAgentConfigured = brokerAgent.isConfigured();
   const oidcConfig = runtimeConfig.config.auth.oidcEnabled ? runtimeConfig.config.auth.oidc ?? null : null;
   const headerConfig = runtimeConfig.config.auth.headerEnabled ? runtimeConfig.config.auth.header ?? null : null;
+  const mcpConfig = runtimeConfig.config.auth.mcp.enabled ? runtimeConfig.config.auth.mcp : null;
   const oidcEndpointOverrides = oidcConfig
     ? [
         oidcConfig.authorizationEndpoint ? 'authorization' : null,
@@ -368,7 +372,7 @@ const logStartupDiagnostics = ({
     logger,
     level: 'info',
     caller: 'context::startup',
-    message: `API auth diagnostics. sessionTtlMinutes=${runtimeConfig.config.auth.sessionTtlMinutes} oidc=${oidcConfig ? `enabled issuer=${oidcConfig.issuerUrl} callback=${getOidcCallbackUrl({ runtimeConfig })} tokenAuth=${oidcConfig.tokenEndpointAuthMethod} claims=${oidcConfig.usernameClaim}/${oidcConfig.emailClaim} endpointOverrides=${oidcEndpointOverrides.length ? oidcEndpointOverrides.join(',') : 'none'}` : 'disabled'} header=${headerConfig ? `enabled usernameHeader=${headerConfig.usernameHeader} groupsHeader=${headerConfig.groupsHeader ?? 'none'} trustedCidrs=${headerConfig.trustedCidrs.length} requiredHeaders=${headerConfig.requiredHeaders.length} defaultRole=${headerConfig.defaultRole}` : 'disabled'}`,
+    message: `API auth diagnostics. sessionTtlMinutes=${runtimeConfig.config.auth.sessionTtlMinutes} oidc=${oidcConfig ? `enabled issuer=${oidcConfig.issuerUrl} callback=${getOidcCallbackUrl({ runtimeConfig })} tokenAuth=${oidcConfig.tokenEndpointAuthMethod} claims=${oidcConfig.usernameClaim}/${oidcConfig.emailClaim} endpointOverrides=${oidcEndpointOverrides.length ? oidcEndpointOverrides.join(',') : 'none'}` : 'disabled'} header=${headerConfig ? `enabled usernameHeader=${headerConfig.usernameHeader} groupsHeader=${headerConfig.groupsHeader ?? 'none'} trustedCidrs=${headerConfig.trustedCidrs.length} requiredHeaders=${headerConfig.requiredHeaders.length} defaultRole=${headerConfig.defaultRole}` : 'disabled'} mcp=${mcpConfig ? `enabled keyId=${mcpConfig.keyId} audience=${mcpConfig.audience} publicKeyFile=${mcpConfig.publicKeyFile}` : 'disabled'}`,
     correlationId,
     context: {
       auth: {
@@ -395,6 +399,17 @@ const logStartupDiagnostics = ({
               usernameHeader: headerConfig.usernameHeader,
               groupsHeader: headerConfig.groupsHeader,
               defaultRole: headerConfig.defaultRole
+            }
+          : null,
+        mcp: mcpConfig
+          ? {
+              enabled: true,
+              publicKeyFile: mcpConfig.publicKeyFile,
+              keyId: mcpConfig.keyId,
+              audience: mcpConfig.audience,
+              maxProofAgeSeconds: mcpConfig.maxProofAgeSeconds,
+              clockSkewSeconds: mcpConfig.clockSkewSeconds,
+              heartbeatStaleSeconds: mcpConfig.heartbeatStaleSeconds
             }
           : null
       }
@@ -577,6 +592,7 @@ const createContext = async ({ correlationId }: { correlationId: string | null }
   const jobs = new JobQueue();
   const audit = new AuditService(db, logger);
   const auth = new AuthService(db, runtimeConfig, logger, audit);
+  const mcpAuth = new McpAuthService(db, runtimeConfig, logger);
   const brokerAgent = new BrokerAgentClient(runtimeConfig, logger);
   const dynsec = new DynsecService(db, runtimeConfig, logger, brokerAgent);
   const brokerConfig = new BrokerConfigService(db, runtimeConfig, logger, brokerAgent);
@@ -585,6 +601,7 @@ const createContext = async ({ correlationId }: { correlationId: string | null }
   const mqtt = new MqttExplorerService(runtimeConfig, logger);
 
   await auth.bootstrapInitialAdmin({ correlationId });
+  await mcpAuth.initialize();
   void logBrokerAgentRuntimeInfo({
     runtimeConfig,
     logger,
@@ -664,6 +681,7 @@ const createContext = async ({ correlationId }: { correlationId: string | null }
     buildInfo,
     db,
     auth,
+    mcpAuth,
     audit,
     jobs,
     brokerAgent,

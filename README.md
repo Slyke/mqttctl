@@ -119,6 +119,7 @@ Production images:
 
 - [`dockerfiles/mqttctl.Dockerfile`](./dockerfiles/mqttctl.Dockerfile)
 - [`dockerfiles/broker-agent.Dockerfile`](./dockerfiles/broker-agent.Dockerfile)
+- [`mcp/Dockerfile`](./mcp/Dockerfile)
 
 Development images:
 
@@ -151,6 +152,7 @@ Default local endpoints:
 - [`mqttctl/mqttctl-api/`](./mqttctl/mqttctl-api): backend services, runtime config, DB layer, auth, dynsec, snapshots, diagnostics, MQTT explorer, logging, and broker-agent client
 - [`mqttctl/mqttctl-fe/`](./mqttctl/mqttctl-fe): SvelteKit routes, pages, hooks, styles, dashboard websocket glue, and frontend error catalog
 - [`broker-agent/`](./broker-agent): Rust crate for broker-local file, dynsec, and lifecycle operations
+- [`mcp/`](./mcp): stateful MCP server for the mqttctl HTTP API
 - [`config/`](./config): sample config, secrets, CSS overrides, compose-mounted broker files, and the optional nginx dev-proxy sample
 - [`docs/`](./docs): operator and contributor guides, plus README screenshot assets under [`docs/images/`](./docs/images)
 - [`dockerfiles/`](./dockerfiles): production and development images
@@ -162,7 +164,8 @@ Control-plane image:
 ```bash
 USERNAME=YOURUSERNAME
 DOMAIN=yourdomain.xyz
-VERSION=v0.0.X
+# VERSION=v0.0.X
+VERSION="dev"
 git tag -a "$VERSION" -m "$VERSION"
 # git tag -f -a "$VERSION" -m "$VERSION"
 # git push --force origin "$VERSION"
@@ -184,7 +187,8 @@ Broker-agent image:
 ```bash
 USERNAME=YOURUSERNAME
 DOMAIN=yourdomain.xyz
-VERSION=v0.0.X
+# VERSION=v0.0.X
+VERSION="dev"
 git tag -a "$VERSION" -m "$VERSION"
 # git tag -f -a "$VERSION" -m "$VERSION"
 # git push --force origin "$VERSION"
@@ -198,6 +202,29 @@ for TAG in latest "$VERSION" "$VERSION-$SHA"; do
   docker tag mqttctl-broker-agent:build "$DOMAIN/$USERNAME/mqttctl-broker-agent:$TAG"
   docker push "$USERNAME/mqttctl-broker-agent:$TAG" # Dockerhub
   docker push "$DOMAIN/$USERNAME/mqttctl-broker-agent:$TAG" # Custom
+done
+```
+
+MQTTCtl MCP image:
+
+```bash
+USERNAME=YOURUSERNAME
+DOMAIN=yourdomain.xyz
+# VERSION=v0.0.X
+VERSION="dev"
+git tag -a "$VERSION" -m "$VERSION"
+# git tag -f -a "$VERSION" -m "$VERSION"
+# git push --force origin "$VERSION"
+
+SHA=$(git rev-parse --short=12 HEAD)
+
+docker build -t mqttctl-mcp:build ./mcp
+
+for TAG in latest "$VERSION" "$VERSION-$SHA"; do
+  docker tag mqttctl-mcp:build "$USERNAME/mqttctl-mcp:$TAG"
+  docker tag mqttctl-mcp:build "$DOMAIN/$USERNAME/mqttctl-mcp:$TAG"
+  docker push "$USERNAME/mqttctl-mcp:$TAG" # Dockerhub
+  docker push "$DOMAIN/$USERNAME/mqttctl-mcp:$TAG" # Custom
 done
 ```
 

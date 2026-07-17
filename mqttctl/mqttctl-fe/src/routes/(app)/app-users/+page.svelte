@@ -3,6 +3,7 @@
   import { copyTableAsJson, type TableJsonPayload } from '$lib/actions/copy-table-json';
   import { apiRequest } from '$lib/stores/api';
   import { formatDisplayCode } from '$lib/strings/display';
+  import type { McpAccessState } from '$lib/types';
 
   export let data: {
     users: Array<{
@@ -13,6 +14,9 @@
       authSource: string;
       disabled: boolean;
     }>;
+    canManageMcp: boolean;
+    mcpConfigured: boolean;
+    mcpAccess: McpAccessState | null;
   };
 
   let message = '';
@@ -115,6 +119,29 @@
       error = caught instanceof Error ? caught.message : 'Failed deleting user.';
     }
   };
+
+  const updateMcpAccess = async (form: HTMLFormElement) => {
+    error = '';
+    message = '';
+    const formData = new FormData(form);
+
+    try {
+      await apiRequest({
+        url: '/api/mcp/access',
+        method: 'PATCH',
+        body: {
+          disabled: formData.get('disabled') === 'on',
+          allowedCapabilities: data.mcpAccess?.defaultCapabilities.filter((capability) => (
+            formData.get(`capability:${capability}`) === 'on'
+          )) ?? []
+        }
+      });
+      message = 'MCP access updated.';
+      await invalidateAll();
+    } catch (caught) {
+      error = caught instanceof Error ? caught.message : 'Failed updating MCP access.';
+    }
+  };
 </script>
 
 <section class="stack">
@@ -130,6 +157,57 @@
   {/if}
   {#if error}
     <div class="badge tone-danger">{error}</div>
+  {/if}
+
+  {#if data.canManageMcp && data.mcpConfigured && data.mcpAccess}
+    <article class="panel stack">
+      <div>
+        <h2>MCP Access</h2>
+        <p class="muted">Control the passwordless MCP service identity. Its username, role, and authentication source are fixed.</p>
+      </div>
+      <form class="stack" on:submit|preventDefault={(event) => updateMcpAccess(event.currentTarget as HTMLFormElement)}>
+        <div class="form-grid app-user-grid">
+          <label class="stack-tight">
+            <span class="muted">Username</span>
+            <input value={data.mcpAccess.username} disabled />
+          </label>
+          <label class="stack-tight">
+            <span class="muted">Role</span>
+            <input value={formatDisplayCode(data.mcpAccess.role)} disabled />
+          </label>
+          <label class="stack-tight">
+            <span class="muted">Authentication</span>
+            <input value={formatDisplayCode(data.mcpAccess.authSource)} disabled />
+          </label>
+          <label class="stack-tight">
+            <span class="muted">Password</span>
+            <input value="No password" disabled />
+          </label>
+        </div>
+        <fieldset class="mcp-capabilities stack-tight">
+          <legend>Allowed capabilities</legend>
+          <div class="mcp-capability-grid">
+            {#each data.mcpAccess.defaultCapabilities as capability}
+              <label class="mcp-capability-option">
+                <input
+                  type="checkbox"
+                  name={`capability:${capability}`}
+                  checked={data.mcpAccess.allowedCapabilities.includes(capability)}
+                />
+                <span>{formatDisplayCode(capability)}</span>
+              </label>
+            {/each}
+          </div>
+        </fieldset>
+        <div class="app-user-footer">
+          <label class="app-user-status">
+            <span class="muted">Disabled</span>
+            <input name="disabled" type="checkbox" checked={data.mcpAccess.disabled} />
+          </label>
+          <button class="button-mid" type="submit">Save MCP Access</button>
+        </div>
+      </form>
+    </article>
   {/if}
 
   <article class="panel stack">
@@ -264,6 +342,24 @@
 
   .app-user-actions {
     justify-content: flex-end;
+  }
+
+  .mcp-capabilities {
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+  }
+
+  .mcp-capability-grid {
+    display: grid;
+    gap: var(--space-2);
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  }
+
+  .mcp-capability-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
   }
 
   @media (max-width: 820px) {

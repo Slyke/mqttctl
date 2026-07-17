@@ -3,8 +3,12 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/mqttctl.Dockerfile
+    restart: unless-stopped
     depends_on:
-      - broker-agent
+      broker-agent:
+        condition: service_started
+      mqttctl-mcp-keygen:
+        condition: service_started
     environment:
       PORT: "3000"
       HOST: "0.0.0.0"
@@ -15,11 +19,14 @@ services:
       MQTTCTL_SQLITE_PATH: /app/data/mqttctl.sqlite
       MQTTCTL_UI_OVERRIDE_CSS_PATH: /app/config/custom.css
       MQTTCTL_LOG_CONSOLE_FORMAT: text
+      MQTTCTL_MCP_AUTH_ENABLED: "true"
+      MQTTCTL_MCP_PUBLIC_KEY_PATH: /run/mqttctl-mcp-public/signing-public.pem
     volumes:
       - ./config/compose/gui-api/mqttctl.config.json5:/app/config/mqttctl.config.json5:ro
       - ./config/compose/gui-api/mqttctl.secrets.json5:/app/config/mqttctl.secrets.json5:ro
       - ./config/compose/gui-api/custom.css:/app/config/custom.css:ro
       - ./config/compose/gui-api/app-data:/app/data
+      - mqttctl-mcp-public:/run/mqttctl-mcp-public:ro
     ports:
       - "3000:3000"
 
@@ -37,3 +44,56 @@ services:
     ports:
       - "1883:1883"
       - "9001:9001"
+
+  mqttctl-mcp-keygen:
+    build:
+      context: ./mcp
+      dockerfile: Dockerfile
+    user: "0:0"
+    command: ["node", "scripts/generate-signing-keypair.mjs"]
+    restart: "no"
+    environment:
+      MQTTCTL_MCP_PRIVATE_KEY_FILE: /run/mqttctl-mcp-private/signing-private.pem
+      MQTTCTL_MCP_PUBLIC_KEY_FILE: /run/mqttctl-mcp-public/signing-public.pem
+      MCP_KEY_OWNER_UID: "1000"
+      MCP_KEY_OWNER_GID: "1000"
+    volumes:
+      - mqttctl-mcp-private:/run/mqttctl-mcp-private
+      - mqttctl-mcp-public:/run/mqttctl-mcp-public
+
+  mqttctl-mcp:
+    build:
+      context: ./mcp
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mqttctl-mcp-keygen:
+        condition: service_completed_successfully
+      mqttctl:
+        condition: service_started
+    environment:
+      MQTTCTL_BASE_URL: http://mqttctl:3000
+      MQTTCTL_MCP_PRIVATE_KEY_FILE: /run/mqttctl-mcp-private/signing-private.pem
+      MQTTCTL_MCP_KEY_ID: compose
+      MQTTCTL_MCP_AUDIENCE: mqttctl-api
+      MCP_READ_BEARER_TOKENS:
+      MCP_READWRITE_BEARER_TOKENS:
+      HTTPS_ENABLED: "true"
+      HTTP_ENABLED: "false"
+      MCP_FAILURE_RESTART_DELAY_SECONDS: "60"
+    volumes:
+      - mqttctl-mcp-private:/run/mqttctl-mcp-private:ro
+      - mqttctl-mcp-data:/app/data
+    ports:
+      - "3443:3443"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --insecure --fail --silent https://localhost:3443/healthz >/dev/null && curl --insecure --fail --silent https://localhost:3443/readyz >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  mqttctl-mcp-private:
+  mqttctl-mcp-public:
+  mqttctl-mcp-data:

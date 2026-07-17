@@ -32,6 +32,20 @@ const createLogger = () => ({
   createError: vi.fn()
 } as unknown as AppLogger);
 
+const createMcpAuth = () => ({
+  getRuntimeInfo: vi.fn().mockResolvedValue({
+    enabled: false,
+    connected: false,
+    reason: 'disabled',
+    version: null,
+    buildHash: null,
+    instanceId: null,
+    startedAt: null,
+    lastSeenAt: null,
+    heartbeatExpiresAt: null
+  })
+});
+
 describe('loadDashboardPageData', () => {
   it('keeps the dashboard loadable when diagnostics already report dynsec as unreadable', async () => {
     const logger = createLogger();
@@ -60,6 +74,7 @@ describe('loadDashboardPageData', () => {
       auth: {
         listUsers: vi.fn().mockResolvedValue([{}, {}])
       },
+      mcpAuth: createMcpAuth(),
       brokerAgent: {
         isConfigured: vi.fn(() => true)
       },
@@ -133,6 +148,7 @@ describe('loadDashboardPageData', () => {
       auth: {
         listUsers: vi.fn().mockResolvedValue([{}])
       },
+      mcpAuth: createMcpAuth(),
       brokerAgent: {
         isConfigured: vi.fn(() => false)
       },
@@ -202,6 +218,7 @@ describe('loadDashboardPageData', () => {
       auth: {
         listUsers: vi.fn().mockResolvedValue([{}])
       },
+      mcpAuth: createMcpAuth(),
       brokerAgent: {
         isConfigured: vi.fn(() => true)
       },

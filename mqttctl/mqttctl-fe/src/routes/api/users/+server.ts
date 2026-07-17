@@ -38,7 +38,8 @@ export const POST = async (event) => {
     const payload = await parseRequestJson({ event, schema: createUserSchema });
     await event.locals.appContext.auth.createUser({
       ...payload,
-      correlationId: event.locals.correlationId
+      correlationId: event.locals.correlationId,
+      actor: event.locals.currentUser
     });
 
     await event.locals.appContext.audit.record({

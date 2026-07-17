@@ -2,11 +2,12 @@
   import { onMount } from 'svelte';
   import { copyTableAsJson, type TableJsonPayload } from '$lib/actions/copy-table-json';
   import { formatDisplayCode } from '$lib/strings/display';
-  import type { DiagnosticsSummary, OperationStatus } from '$lib/types';
+  import type { DiagnosticsSummary, McpRuntimeInfo, OperationStatus } from '$lib/types';
 
   export let data: {
     basePath: string;
     diagnostics: DiagnosticsSummary;
+    mcpRuntime: McpRuntimeInfo;
     uiTransport: {
       label: string;
       security: 'tls' | 'unencrypted';
@@ -39,6 +40,7 @@
         type: 'status';
         generatedAt: string;
         diagnostics: DiagnosticsSummary;
+        mcpRuntime: McpRuntimeInfo;
       };
   type BackendConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
   type DashboardBadgeTone = 'tone-mid' | 'tone-warning' | 'tone-danger';
@@ -99,6 +101,23 @@
     return { label: 'DynSec State Unreadable', tone: 'tone-danger' };
   };
 
+  const mcpServerStatus = ({
+    runtime,
+    nowMs
+  }: {
+    runtime: McpRuntimeInfo;
+    nowMs: number;
+  }): { label: string; tone: DashboardBadgeTone } => {
+    const heartbeatFresh = runtime.heartbeatExpiresAt
+      ? new Date(runtime.heartbeatExpiresAt).getTime() > nowMs
+      : false;
+    const connected = runtime.connected && heartbeatFresh;
+
+    return connected
+      ? { label: 'MCP Server Connected', tone: 'tone-mid' }
+      : { label: 'MCP Server Disconnected', tone: 'tone-danger' };
+  };
+
   const createDashboardSocketUrl = () => {
     const url = new URL(`${data.basePath}/api/dashboard/ws`, window.location.href);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -135,12 +154,16 @@
   };
 
   let liveDiagnostics = data.diagnostics;
+  let liveMcpRuntime = data.mcpRuntime;
+  let currentTimeMs = Date.now();
   let backendConnectionState: BackendConnectionState = 'connecting';
   let dashboardSocket: WebSocket | null = null;
   let reconnectTimer: number | null = null;
   let keepDashboardSocketAlive = true;
+  let statusClock: number | null = null;
   let currentBrokerStatus = brokerStatus({ state: backendConnectionState });
   let currentDynsecStatus = dynsecStatus({ state: backendConnectionState });
+  let currentMcpStatus = mcpServerStatus({ runtime: liveMcpRuntime, nowMs: currentTimeMs });
   let recentWritesTableJson: TableJsonPayload;
 
   const clearReconnectTimer = () => {
@@ -168,6 +191,7 @@
     if (message.type !== 'status') return;
 
     liveDiagnostics = message.diagnostics;
+    liveMcpRuntime = message.mcpRuntime;
     backendConnectionState = 'connected';
     clearReconnectTimer();
   };
@@ -214,6 +238,9 @@
   };
 
   onMount(() => {
+    statusClock = window.setInterval(() => {
+      currentTimeMs = Date.now();
+    }, 1_000);
     openDashboardSocket();
 
     return () => {
@@ -221,11 +248,16 @@
       clearReconnectTimer();
       dashboardSocket?.close();
       dashboardSocket = null;
+      if (statusClock !== null) {
+        window.clearInterval(statusClock);
+        statusClock = null;
+      }
     };
   });
 
   $: currentBrokerStatus = brokerStatus({ state: backendConnectionState });
   $: currentDynsecStatus = dynsecStatus({ state: backendConnectionState });
+  $: currentMcpStatus = mcpServerStatus({ runtime: liveMcpRuntime, nowMs: currentTimeMs });
   $: recentWritesTableJson = {
     section: 'Dashboard',
     table: 'Recent Writes',
@@ -294,6 +326,11 @@
         <div class="badge dashboard-status-badge {currentDynsecStatus.tone}">
           {currentDynsecStatus.label}
         </div>
+        {#if liveMcpRuntime.enabled}
+          <div class="badge dashboard-status-badge {currentMcpStatus.tone}">
+            {currentMcpStatus.label}
+          </div>
+        {/if}
         {#if liveDiagnostics.dynsecBootstrap.status === 'running' || liveDiagnostics.dynsecBootstrap.status === 'failed'}
           <div class="badge dashboard-status-badge {dynsecBootstrapNoticeTone({ status: liveDiagnostics.dynsecBootstrap.status })}">
             DynSec Bootstrap {formatDisplayCode(liveDiagnostics.dynsecBootstrap.status)}

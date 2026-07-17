@@ -465,7 +465,7 @@ export class AppDatabase {
   }
 
   async countUsers() {
-    const row = await this.queryFirst<{ count: number | string }>({ text: 'SELECT COUNT(*) AS count FROM app_users' });
+    const row = await this.queryFirst<{ count: number | string }>({ text: "SELECT COUNT(*) AS count FROM app_users WHERE auth_source <> 'mcp'" });
     return Number(row?.count ?? 0);
   }
 

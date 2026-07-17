@@ -28,10 +28,23 @@ interface LogEvent {
   correlationId?: string | null;
   errorKey?: string | null;
   errorCode?: string | null;
+  loggerKey?: string | null;
   context?: unknown;
   rootCause?: unknown;
   errorStack?: unknown;
   errorChain?: unknown[];
+  sinks?: LogSinkSelection | null;
+}
+
+interface GenerateErrorOptions {
+  caller?: string;
+  reason?: string;
+  errorKey?: string;
+  err?: unknown;
+  includeStackTrace?: boolean;
+  correlationId?: string | null;
+  context?: unknown;
+  status?: number;
   sinks?: LogSinkSelection | null;
 }
 
@@ -343,6 +356,7 @@ export const createLogger = ({ options }: { options: LoggerOptions }) => {
       errorKey: event.errorKey ?? derivedAppError?.errorKey ?? undefined,
       correlationId: event.correlationId ?? undefined,
       caller: event.caller || 'unknown',
+      loggerKey: event.loggerKey ?? undefined,
       rootCause: rootCause ?? undefined,
       rootCauseDetails: rootCauseDetails ?? undefined,
       errorStack: errorStack ?? undefined,
@@ -409,13 +423,14 @@ export const createLogger = ({ options }: { options: LoggerOptions }) => {
         console.error(`Curl log sink failed: ${toStackString({ value: error }) ?? 'unknown'}`);
       });
     }
+    return normalized;
   };
 
   const generateBoundLog = ({
     level = 'debug',
     ...event
   }: Omit<LogEvent, 'level'> & { level?: LogLevel }) => {
-    logMessage({
+    return logMessage({
       event: {
         level,
         ...event
@@ -423,12 +438,57 @@ export const createLogger = ({ options }: { options: LoggerOptions }) => {
     });
   };
 
+  const generateBoundError = ({
+    caller = 'unknown',
+    reason = 'Unexpected error',
+    errorKey = 'ERR_UNKNOWN',
+    err,
+    includeStackTrace = false,
+    correlationId = null,
+    context = null,
+    status = 500,
+    sinks = null
+  }: GenerateErrorOptions = {}) => {
+    const generated = createAppError({
+      caller,
+      reason,
+      errorKey,
+      correlationId,
+      context,
+      status,
+      cause: err ?? null
+    });
+
+    logMessage({
+      event: {
+        level: 'error',
+        caller,
+        loggerKey: errorKey,
+        message: reason,
+        correlationId,
+        errorKey,
+        errorCode: generated.errorCode,
+        context,
+        rootCause: err,
+        errorStack: includeStackTrace ? err : undefined,
+        errorChain: generated.errorChain,
+        sinks
+      }
+    });
+
+    return generated;
+  };
+
+  const wrapBoundError = (options: GenerateErrorOptions = {}) => generateBoundError(options);
+
   return {
     debug: (event: Omit<LogEvent, 'level'>) => logMessage({ event: { level: 'debug', ...event } }),
     info: (event: Omit<LogEvent, 'level'>) => logMessage({ event: { level: 'info', ...event } }),
     warn: (event: Omit<LogEvent, 'level'>) => logMessage({ event: { level: 'warn', ...event } }),
     error: (event: Omit<LogEvent, 'level'>) => logMessage({ event: { level: 'error', ...event } }),
     generateLog: generateBoundLog,
+    generateError: generateBoundError,
+    wrapError: wrapBoundError,
     createError: createAppError
   };
 };
@@ -448,3 +508,17 @@ export const generateLog = ({
     ...event
   });
 };
+
+export const generateError = ({
+  logger,
+  ...options
+}: {
+  logger: AppLogger;
+} & GenerateErrorOptions) => logger.generateError(options);
+
+export const wrapError = ({
+  logger,
+  ...options
+}: {
+  logger: AppLogger;
+} & GenerateErrorOptions) => logger.wrapError(options);

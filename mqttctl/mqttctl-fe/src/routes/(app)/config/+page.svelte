@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { apiRequest, buildApiUrl } from '$lib/stores/api';
-  import type { BrokerAgentRuntimeInfo, ManagedBrokerKeyFileId, ManagedBrokerKeyFileStatus } from '$lib/types';
+  import type { BrokerAgentRuntimeInfo, ManagedBrokerKeyFileId, ManagedBrokerKeyFileStatus, McpRuntimeInfo } from '$lib/types';
 
   export let data: {
     canManageBroker: boolean;
@@ -18,6 +18,7 @@
   let keyFilesLoading = false;
   let keyFilesError = '';
   let brokerAgentRuntimeInfo: BrokerAgentRuntimeInfo | null = null;
+  let mcpRuntimeInfo: McpRuntimeInfo | null = null;
 
   const keyFileLabels: Record<ManagedBrokerKeyFileId, string> = {
     caFile: 'CA File',
@@ -51,16 +52,19 @@
         data: {
           files: ManagedBrokerKeyFileStatus[];
           brokerAgentRuntimeInfo: BrokerAgentRuntimeInfo | null;
+          mcpRuntimeInfo: McpRuntimeInfo;
         };
       } | {
         files: ManagedBrokerKeyFileStatus[];
         brokerAgentRuntimeInfo: BrokerAgentRuntimeInfo | null;
+        mcpRuntimeInfo: McpRuntimeInfo;
       }>({
         url: '/api/config/key-files',
         method: 'GET'
       }));
       keyFiles = result.files;
       brokerAgentRuntimeInfo = result.brokerAgentRuntimeInfo;
+      mcpRuntimeInfo = result.mcpRuntimeInfo;
     } catch (caught) {
       keyFilesError = caught instanceof Error ? caught.message : 'Failed loading managed key files.';
     } finally {
@@ -233,8 +237,8 @@
   <article class="panel stack">
     <div class="config-section-header">
       <div>
-        <h2>Broker Agent Runtime</h2>
-        <p class="muted">Runtime metadata reported by the configured broker-agent.</p>
+        <h2>Runtime Info</h2>
+        <p class="muted">Runtime metadata reported by the configured broker-agent and MCP server.</p>
       </div>
     </div>
 
@@ -251,6 +255,24 @@
         <span class="runtime-info-label">MQTT Server Version</span>
         <code>{runtimeValue({ value: brokerAgentRuntimeInfo?.mqttServerVersion ?? null })}</code>
       </section>
+      {#if mcpRuntimeInfo?.enabled}
+        <section class="runtime-info-item stack-tight">
+          <span class="runtime-info-label">MCP Version</span>
+          <code>{runtimeValue({ value: mcpRuntimeInfo.version })}</code>
+        </section>
+        <section class="runtime-info-item stack-tight">
+          <span class="runtime-info-label">MCP Build Hash</span>
+          <code>{runtimeValue({ value: mcpRuntimeInfo.buildHash })}</code>
+        </section>
+        <section class="runtime-info-item stack-tight">
+          <span class="runtime-info-label">MCP Status</span>
+          <code>{mcpRuntimeInfo.connected ? 'Connected' : 'Disconnected'}</code>
+        </section>
+        <section class="runtime-info-item stack-tight">
+          <span class="runtime-info-label">MCP Last Seen</span>
+          <code>{runtimeValue({ value: mcpRuntimeInfo.lastSeenAt })}</code>
+        </section>
+      {/if}
     </div>
   </article>
 </section>

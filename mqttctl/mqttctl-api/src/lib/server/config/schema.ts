@@ -218,6 +218,25 @@ export const configSchema = z.object({
     oidcEnabled: z.boolean().default(false),
     headerEnabled: z.boolean().default(false),
     sessionTtlMinutes: z.number().int().positive().default(1440),
+    mcp: z.object({
+      enabled: z.boolean().default(false),
+      publicKeyFile: z.string().min(1).default('/run/mqttctl-mcp-public/signing-public.pem'),
+      keyId: z.string().min(1).default('compose'),
+      audience: z.string().min(1).default('mqttctl-api'),
+      maxProofAgeSeconds: z.number().int().min(5).max(300).default(30),
+      clockSkewSeconds: z.number().int().min(0).max(60).default(5),
+      replayCacheMaxEntries: z.number().int().min(100).max(100000).default(10000),
+      heartbeatStaleSeconds: z.number().int().min(10).max(300).default(45)
+    }).default({
+      enabled: false,
+      publicKeyFile: '/run/mqttctl-mcp-public/signing-public.pem',
+      keyId: 'compose',
+      audience: 'mqttctl-api',
+      maxProofAgeSeconds: 30,
+      clockSkewSeconds: 5,
+      replayCacheMaxEntries: 10000,
+      heartbeatStaleSeconds: 45
+    }),
     oidc: z.object({
       issuerUrl: z.string().url(),
       clientId: z.string().min(1),

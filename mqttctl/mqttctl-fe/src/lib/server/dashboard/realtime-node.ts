@@ -13,6 +13,7 @@ interface UpgradeCapableServer {
 interface DashboardRuntimeSnapshot {
   generatedAt: string;
   diagnostics: unknown;
+  mcpRuntime?: unknown;
 }
 
 export interface DashboardWebSocketRuntime {
@@ -58,6 +59,7 @@ interface DashboardStatusMessage {
   type: 'status';
   generatedAt: string;
   diagnostics: unknown;
+  mcpRuntime?: unknown;
 }
 
 const rejectUpgrade = ({
@@ -96,7 +98,8 @@ const sendRawMessage = ({
 const createStatusPayload = ({ snapshot }: { snapshot: DashboardRuntimeSnapshot }) => JSON.stringify({
   type: 'status',
   generatedAt: snapshot.generatedAt,
-  diagnostics: snapshot.diagnostics
+  diagnostics: snapshot.diagnostics,
+  mcpRuntime: snapshot.mcpRuntime
 } satisfies DashboardStatusMessage);
 
 const toHeaders = ({ requestHeaders }: { requestHeaders: IncomingHttpHeaders }) => {

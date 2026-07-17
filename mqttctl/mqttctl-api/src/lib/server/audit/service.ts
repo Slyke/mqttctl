@@ -157,7 +157,16 @@ export class AuditService {
   }) {
     const sanitizedBeforeSummary = redactAuditSecrets({ value: beforeSummary });
     const sanitizedAfterSummary = redactAuditSecrets({ value: afterSummary });
-    const sanitizedCommandResult = redactAuditSecrets({ value: commandResult });
+    const attributedCommandResult = actor?.delegatedIdentity
+      ? {
+          result: commandResult,
+          mcp: {
+            delegatedClient: actor.delegatedIdentity.clientName,
+            delegatedAccess: actor.delegatedIdentity.access
+          }
+        }
+      : commandResult;
+    const sanitizedCommandResult = redactAuditSecrets({ value: attributedCommandResult });
     const runWrite = async () => {
       await this.db.appendAudit({
         id: createOpaqueToken({ bytes: 18 }),
@@ -182,7 +191,9 @@ export class AuditService {
         correlationId,
         context: {
           targetId,
-          actor: actor?.username ?? null
+          actor: actor?.username ?? null,
+          delegatedClient: actor?.delegatedIdentity?.clientName ?? null,
+          delegatedAccess: actor?.delegatedIdentity?.access ?? null
         }
       });
     };

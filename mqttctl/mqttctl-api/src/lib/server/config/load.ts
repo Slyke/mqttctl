@@ -11,6 +11,10 @@ export interface LoadedRuntimeConfig {
   uiOverrideCssPath: string | null;
 }
 
+const parseBooleanOverride = ({ value }: { value: string }) => (
+  ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase())
+);
+
 const readJson5File = async ({ filePath, errorKey, correlationId }: { filePath: string; errorKey: string; correlationId: string | null }) => {
   try {
     const text = await readFile(filePath, 'utf8');
@@ -69,6 +73,19 @@ export const loadRuntimeConfig = async ({ correlationId = null }: { correlationI
       correlationId,
       context: secretsResult.error.flatten()
     });
+  }
+
+  if (process.env.MQTTCTL_MCP_AUTH_ENABLED !== undefined) {
+    configResult.data.auth.mcp.enabled = parseBooleanOverride({
+      value: process.env.MQTTCTL_MCP_AUTH_ENABLED
+    });
+  }
+
+  if (process.env.MQTTCTL_MCP_PUBLIC_KEY_PATH !== undefined) {
+    const publicKeyFile = process.env.MQTTCTL_MCP_PUBLIC_KEY_PATH.trim();
+    if (publicKeyFile) {
+      configResult.data.auth.mcp.publicKeyFile = publicKeyFile;
+    }
   }
 
   if (

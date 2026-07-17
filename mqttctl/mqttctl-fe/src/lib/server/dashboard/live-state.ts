@@ -1,17 +1,18 @@
 import { EventEmitter } from 'node:events';
-import type { DiagnosticsSummary } from '$lib/types';
+import type { DiagnosticsSummary, McpRuntimeInfo } from '$lib/types';
 import type { AppContext } from '$server/context';
 
 const dashboardSnapshotEvent = 'dashboard-snapshot';
 
 export interface DashboardSnapshot {
   diagnostics: DiagnosticsSummary;
+  mcpRuntime: McpRuntimeInfo;
   generatedAt: string;
 }
 
 const dashboardEmitter = new EventEmitter();
 let latestSnapshot: DashboardSnapshot | null = null;
-let latestDiagnosticsJson: string | null = null;
+let latestSnapshotJson: string | null = null;
 
 export const getLatestDashboardSnapshot = () => latestSnapshot;
 
@@ -28,19 +29,22 @@ export const subscribeDashboardSnapshots = ({
 };
 
 export const updateDashboardSnapshot = ({
-  diagnostics
+  diagnostics,
+  mcpRuntime
 }: {
   diagnostics: DiagnosticsSummary;
+  mcpRuntime: McpRuntimeInfo;
 }) => {
-  const diagnosticsJson = JSON.stringify(diagnostics);
+  const snapshotJson = JSON.stringify({ diagnostics, mcpRuntime });
 
-  if (diagnosticsJson === latestDiagnosticsJson && latestSnapshot) {
+  if (snapshotJson === latestSnapshotJson && latestSnapshot) {
     return latestSnapshot;
   }
 
-  latestDiagnosticsJson = diagnosticsJson;
+  latestSnapshotJson = snapshotJson;
   latestSnapshot = {
     diagnostics,
+    mcpRuntime,
     generatedAt: new Date().toISOString()
   };
 
@@ -56,6 +60,21 @@ export const refreshDashboardSnapshot = async ({
   appContext: AppContext;
   correlationId: string | null;
 }) => {
-  const diagnostics = await appContext.diagnostics.getSummary({ correlationId });
-  return updateDashboardSnapshot({ diagnostics });
+  const [diagnostics, mcpRuntime] = await Promise.all([
+    appContext.diagnostics.getSummary({ correlationId }),
+    appContext.mcpAuth.getRuntimeInfo()
+  ]);
+  return updateDashboardSnapshot({ diagnostics, mcpRuntime });
+};
+
+export const refreshDashboardMcpRuntime = async ({
+  appContext
+}: {
+  appContext: AppContext;
+}) => {
+  if (!latestSnapshot) return null;
+  return updateDashboardSnapshot({
+    diagnostics: latestSnapshot.diagnostics,
+    mcpRuntime: await appContext.mcpAuth.getRuntimeInfo()
+  });
 };

@@ -1,7 +1,8 @@
 export const userRoles = ['super_admin', 'broker_admin', 'security_admin', 'operator', 'viewer'] as const;
 export type UserRole = (typeof userRoles)[number];
+export type PrincipalRole = UserRole | 'mcp';
 
-export const authMethods = ['local', 'oidc', 'header'] as const;
+export const authMethods = ['local', 'oidc', 'header', 'mcp'] as const;
 export type AuthMethod = (typeof authMethods)[number];
 export const auditEntryLimitValues = ['10', '20', '50', '100', 'all'] as const;
 export type AuditEntryLimitValue = (typeof auditEntryLimitValues)[number];
@@ -32,7 +33,7 @@ export interface AppUser {
   id: string;
   username: string;
   email: string | null;
-  role: UserRole;
+  role: PrincipalRole;
   authSource: AuthMethod;
   externalSubject: string | null;
   protectedFromAutoLink: boolean;
@@ -58,8 +59,13 @@ export interface AuthenticatedUser {
   id: string;
   username: string;
   email: string | null;
-  role: UserRole;
+  role: PrincipalRole;
   authSource: AuthMethod;
+  capabilities?: string[];
+  delegatedIdentity?: {
+    clientName: string;
+    access: 'read' | 'readwrite';
+  } | null;
 }
 
 export interface DynsecRoleRef {
@@ -328,4 +334,36 @@ export interface ApiErrorBody {
   reason: string;
   correlationId: string | null;
   details?: unknown;
+}
+
+export interface McpDelegatedIdentity {
+  clientName: string;
+  access: 'read' | 'readwrite';
+}
+
+export interface McpRuntimeInfo {
+  enabled: boolean;
+  connected: boolean;
+  reason: string;
+  version: string | null;
+  buildHash: string | null;
+  instanceId: string | null;
+  startedAt: string | null;
+  lastSeenAt: string | null;
+  heartbeatExpiresAt: string | null;
+}
+
+export interface McpAccessState {
+  id: 'system:mcp';
+  username: 'mcp';
+  role: 'mcp';
+  authSource: 'mcp';
+  disabled: boolean;
+  defaultCapabilities: string[];
+  allowedCapabilities: string[];
+  signingKey: {
+    keyId: string;
+    fingerprint: string | null;
+  };
+  runtime: McpRuntimeInfo;
 }
