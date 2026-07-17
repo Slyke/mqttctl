@@ -1,5 +1,7 @@
 FROM node:22-alpine
 
+ARG BUILD_HASH=development
+
 RUN apk add --no-cache curl openssl
 
 WORKDIR /app
@@ -7,7 +9,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY . .
-RUN node scripts/write-build-info.mjs \
+RUN BUILD_HASH="${BUILD_HASH}" node scripts/write-build-info.mjs \
   && chmod +x scripts/run-with-restart-delay.sh \
   && mkdir -p /app/data/certs \
   && chown -R node:node /app

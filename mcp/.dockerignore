@@ -3,4 +3,5 @@ data
 config.json5
 .env
 test
+docs
 *.log

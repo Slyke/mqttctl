@@ -275,7 +275,7 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Dashboard</h1>
-      <p class="muted">Operational health, broker reachability, and recent write activity.</p>
+      <p class="muted">Operational health, service reachability, and recent write activity.</p>
     </div>
   </div>
 
@@ -315,7 +315,7 @@
 
   <div class="panel-grid">
     <article class="panel stack-tight">
-      <h2>Broker Reachability</h2>
+      <h2>Reachability</h2>
       <div class="dashboard-status-list">
         <div class="badge dashboard-status-badge {backendConnectionTone({ state: backendConnectionState })}">
           {backendConnectionLabel({ state: backendConnectionState })}
@@ -327,7 +327,11 @@
           {currentDynsecStatus.label}
         </div>
         {#if liveMcpRuntime.enabled}
-          <div class="badge dashboard-status-badge {currentMcpStatus.tone}">
+          <div
+            class="badge dashboard-status-badge {currentMcpStatus.tone}"
+            title={`MCP last seen: ${liveMcpRuntime.lastSeenAt ?? 'Never'}`}
+            aria-label={`${currentMcpStatus.label}. MCP last seen: ${liveMcpRuntime.lastSeenAt ?? 'Never'}`}
+          >
             {currentMcpStatus.label}
           </div>
         {/if}

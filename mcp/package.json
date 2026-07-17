@@ -1,6 +1,6 @@
 {
   "name": "mqttctl-mcp",
-  "version": "0.1.0",
+  "version": "0.0.6",
   "description": "Stateful MCP server for the mqttctl HTTP API.",
   "license": "MIT",
   "type": "module",

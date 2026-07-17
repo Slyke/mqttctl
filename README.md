@@ -164,8 +164,7 @@ Control-plane image:
 ```bash
 USERNAME=YOURUSERNAME
 DOMAIN=yourdomain.xyz
-# VERSION=v0.0.X
-VERSION="dev"
+VERSION=v0.0.6
 git tag -a "$VERSION" -m "$VERSION"
 # git tag -f -a "$VERSION" -m "$VERSION"
 # git push --force origin "$VERSION"
@@ -187,8 +186,7 @@ Broker-agent image:
 ```bash
 USERNAME=YOURUSERNAME
 DOMAIN=yourdomain.xyz
-# VERSION=v0.0.X
-VERSION="dev"
+VERSION=v0.0.6
 git tag -a "$VERSION" -m "$VERSION"
 # git tag -f -a "$VERSION" -m "$VERSION"
 # git push --force origin "$VERSION"
@@ -210,15 +208,14 @@ MQTTCtl MCP image:
 ```bash
 USERNAME=YOURUSERNAME
 DOMAIN=yourdomain.xyz
-# VERSION=v0.0.X
-VERSION="dev"
+VERSION=v0.0.6
 git tag -a "$VERSION" -m "$VERSION"
 # git tag -f -a "$VERSION" -m "$VERSION"
 # git push --force origin "$VERSION"
 
 SHA=$(git rev-parse --short=12 HEAD)
 
-docker build -t mqttctl-mcp:build ./mcp
+docker build --build-arg BUILD_HASH="$SHA" -t mqttctl-mcp:build ./mcp
 
 for TAG in latest "$VERSION" "$VERSION-$SHA"; do
   docker tag mqttctl-mcp:build "$USERNAME/mqttctl-mcp:$TAG"

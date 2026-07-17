@@ -242,7 +242,7 @@
       </div>
     </div>
 
-    <div class="runtime-info-grid">
+    <div class="runtime-info-grid" class:runtime-info-grid-five={mcpRuntimeInfo?.enabled}>
       <section class="runtime-info-item stack-tight">
         <span class="runtime-info-label">Agent Version</span>
         <code>{runtimeValue({ value: brokerAgentRuntimeInfo?.brokerAgentVersion ?? null })}</code>
@@ -263,14 +263,6 @@
         <section class="runtime-info-item stack-tight">
           <span class="runtime-info-label">MCP Build Hash</span>
           <code>{runtimeValue({ value: mcpRuntimeInfo.buildHash })}</code>
-        </section>
-        <section class="runtime-info-item stack-tight">
-          <span class="runtime-info-label">MCP Status</span>
-          <code>{mcpRuntimeInfo.connected ? 'Connected' : 'Disconnected'}</code>
-        </section>
-        <section class="runtime-info-item stack-tight">
-          <span class="runtime-info-label">MCP Last Seen</span>
-          <code>{runtimeValue({ value: mcpRuntimeInfo.lastSeenAt })}</code>
         </section>
       {/if}
     </div>
@@ -333,6 +325,10 @@
     grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
   }
 
+  .runtime-info-grid.runtime-info-grid-five {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   .runtime-info-item {
     padding: var(--space-3);
     border: 1px solid var(--color-border-strong);
@@ -351,5 +347,19 @@
   .runtime-info-item code {
     white-space: normal;
     word-break: break-word;
+  }
+
+  @media (max-width: 50rem) {
+    .runtime-info-grid,
+    .runtime-info-grid.runtime-info-grid-five {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 32rem) {
+    .runtime-info-grid,
+    .runtime-info-grid.runtime-info-grid-five {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 </style>
