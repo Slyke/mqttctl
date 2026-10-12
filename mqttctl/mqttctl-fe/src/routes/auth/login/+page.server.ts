@@ -31,7 +31,7 @@ export const actions = {
         correlationId: event.locals.correlationId
       });
 
-      throw redirect(303, redirectUrl.href);
+      throw redirect(303, redirectUrl.href, { external: [redirectUrl.origin] });
     }
 
     const sourceIp = getSourceIp({ event });

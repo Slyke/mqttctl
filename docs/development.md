@@ -33,6 +33,18 @@ npm run build
 npm run error-validate
 ```
 
+The workspace uses TypeScript 6.0.3, the newest release supported by the
+SvelteKit 3 and svelte-check peer dependencies. TypeScript 7 is not yet supported
+by this toolchain. SvelteKit configuration lives in `mqttctl-fe/vite.config.ts`.
+
+Start production builds with `npm start` (or `node server.mjs` from
+`mqttctl-fe`). The startup wrapper preserves runtime `ORIGIN` support on
+adapter-node 6 and detects direct HTTP connections. Set `ORIGIN` to the public
+origin behind a reverse proxy. Alternatively, explicitly configure
+`PROTOCOL_HEADER` / `HOST_HEADER` for a trusted proxy that overwrites those
+headers. Keep `publicBaseUrl` in the mqttctl configuration set to the
+browser-facing URL for authentication and WebSocket origin checks.
+
 Set the minimum runtime env vars before running the built app manually:
 
 ```bash
@@ -48,6 +60,13 @@ Optional:
 - `MQTTCTL_LOG_*` sink overrides and Kubernetes log metadata env vars described in [`advanced-operations.md`](./advanced-operations.md)
 
 ### Broker Agent
+
+The images use Rust 1.99.0 and Mosquitto 2.1.2. When the agent runs as root,
+new dynamic-security files are assigned to `mosquitto` so the broker can read
+them after dropping privileges. If your broker uses another OS account, set
+`broker.dynsecBootstrap.fileOwner` to that account. Existing state files and
+their parent directory must already be readable and writable by the broker;
+the agent does not change ownership of existing files.
 
 ```bash
 cd broker-agent

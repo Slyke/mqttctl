@@ -1,4 +1,5 @@
 node_modules
+**/node_modules
 mqttctl/node_modules
 mqttctl/mqttctl-fe/.svelte-kit
 mqttctl/mqttctl-fe/build

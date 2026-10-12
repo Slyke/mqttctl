@@ -4,20 +4,20 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "argon2": "0.44.0",
-    "better-sqlite3": "12.8.0",
-    "drizzle-orm": "0.45.2",
+    "argon2": "0.45.1",
+    "better-sqlite3": "13.0.3",
+    "drizzle-orm": "0.45.4",
     "json5": "^2.2.3",
-    "mqtt": "5.15.1",
-    "openid-client": "6.8.2",
-    "pg": "8.20.0",
-    "zod": "4.3.6"
+    "mqtt": "5.16.0",
+    "openid-client": "6.8.8",
+    "pg": "8.23.1",
+    "zod": "4.6.6"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "7.6.13",
-    "@types/node": "25.5.0",
-    "@types/pg": "8.20.0",
-    "typescript": "5.9.3"
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "26.6.5",
+    "@types/pg": "8.23.1",
+    "typescript": "6.0.3"
   },
   "scripts": {
     "check": "tsc --noEmit -p ./tsconfig.json",

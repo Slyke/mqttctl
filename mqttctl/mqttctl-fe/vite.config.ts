@@ -1,5 +1,5 @@
+import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
-// @ts-expect-error Vite config runs under native ESM, so this import needs the explicit .ts extension.
 import { attachDashboardWebSocketServer } from './src/lib/server/dashboard/realtime-node.ts';
 import { defineConfig } from 'vitest/config';
 
@@ -22,7 +22,16 @@ export default defineConfig({
         });
       }
     },
-    sveltekit()
+    sveltekit({
+      adapter: adapter(),
+      alias: {
+        $lib: './src/lib',
+        $api: '../mqttctl-api/src',
+        $server: '../mqttctl-api/src/lib/server',
+        $types: '../mqttctl-api/src/lib/types',
+        $styles: './src/lib/styles'
+      }
+    })
   ],
   server: {
     fs: {

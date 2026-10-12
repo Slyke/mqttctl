@@ -1,5 +1,5 @@
 {
-  "extends": "./.svelte-kit/tsconfig.json",
+  "extends": "$app/tsconfig",
   "compilerOptions": {
     "allowJs": false,
     "checkJs": false,
@@ -15,7 +15,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2023",
-    "types": ["node"]
-  }
+    "types": ["node", "$app/types"]
+  },
+  "include": ["src", "tests", "*.ts"]
 }
-

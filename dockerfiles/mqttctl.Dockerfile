@@ -9,10 +9,10 @@ RUN apt-get update \
 COPY mqttctl/package.json mqttctl/package-lock.json ./
 COPY mqttctl/mqttctl-fe/package.json ./mqttctl-fe/package.json
 COPY mqttctl/mqttctl-api/package.json ./mqttctl-api/package.json
-RUN npm install
+RUN npm ci
 
 COPY . /workspace
-RUN npm run build
+RUN npm run build && npm prune --omit=dev
 
 FROM node:24-bookworm-slim
 
@@ -25,7 +25,8 @@ RUN apt-get update \
 COPY mqttctl/package.json mqttctl/package-lock.json ./
 COPY mqttctl/mqttctl-fe/package.json ./mqttctl-fe/package.json
 COPY mqttctl/mqttctl-api/package.json ./mqttctl-api/package.json
-RUN npm install --omit=dev
+COPY --from=build /workspace/mqttctl/node_modules ./node_modules
+COPY mqttctl/mqttctl-fe/server.mjs ./mqttctl-fe/server.mjs
 
 COPY --from=build /workspace/mqttctl/mqttctl-fe/build ./mqttctl-fe/build
 COPY --from=build /workspace/mqttctl/mqttctl-fe/static ./mqttctl-fe/static

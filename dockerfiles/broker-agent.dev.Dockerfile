@@ -1,6 +1,6 @@
-FROM eclipse-mosquitto:2.0.21
+FROM eclipse-mosquitto:2.1.2-alpine
 
-ARG RUST_VERSION=1.83.0
+ARG RUST_VERSION=1.99.0
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \

@@ -18,12 +18,11 @@
     "strict": true,
     "target": "ES2023",
     "types": ["node"],
-    "baseUrl": ".",
     "paths": {
-      "$lib/*": ["src/lib/*"],
-      "$server/*": ["src/lib/server/*"],
-      "$types": ["src/lib/types/index.ts"],
-      "$types/*": ["src/lib/types/*"]
+      "$lib/*": ["./src/lib/*"],
+      "$server/*": ["./src/lib/server/*"],
+      "$types": ["./src/lib/types/index.ts"],
+      "$types/*": ["./src/lib/types/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts"]

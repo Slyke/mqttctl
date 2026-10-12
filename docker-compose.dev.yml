@@ -53,7 +53,7 @@ services:
       - "9001:9001"
 
   proxy:
-    image: nginx:1.27.4-alpine
+    image: nginx:1.31.6-alpine
     container_name: mqttctl-nginx-proxy
     ports:
       - "443:443"

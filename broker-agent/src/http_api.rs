@@ -46,7 +46,7 @@ pub fn router(state: ApiState) -> Router {
         .route("/broker-config/current", get(get_broker_config_current))
         .route("/broker-config/write", post(post_broker_config_write))
         .route("/broker-key-files", get(get_managed_key_files))
-        .route("/broker-key-files/:file_id", get(get_managed_key_file))
+        .route("/broker-key-files/{file_id}", get(get_managed_key_file))
         .route("/broker/reload", post(post_broker_reload))
         .route("/broker/restart", post(post_broker_restart))
         .route("/runtime", get(get_runtime))

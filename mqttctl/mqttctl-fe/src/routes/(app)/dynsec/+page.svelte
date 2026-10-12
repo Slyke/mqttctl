@@ -362,9 +362,8 @@
     effectivePermissionsOpen = new URLSearchParams(currentQuerySearch).get('permissions') === '1';
 
     await goto(nextUrl, {
-      keepFocus: true,
-      noScroll: true,
-      replaceState
+      reset: false,
+      replace: replaceState
     });
   };
 

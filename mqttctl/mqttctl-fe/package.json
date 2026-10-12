@@ -4,29 +4,29 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "argon2": "0.44.0",
-    "better-sqlite3": "12.8.0",
-    "zod": "4.3.6"
+    "argon2": "0.45.1",
+    "better-sqlite3": "13.0.3",
+    "zod": "4.6.6"
   },
   "devDependencies": {
-    "@sveltejs/adapter-node": "5.5.4",
-    "@sveltejs/kit": "2.65.1",
-    "@sveltejs/vite-plugin-svelte": "7.0.0",
-    "@types/node": "25.5.0",
-    "svelte": "5.56.3",
-    "svelte-check": "4.4.6",
-    "typescript": "5.9.3",
-    "vite": "8.0.16",
-    "vitest": "4.1.2"
+    "@sveltejs/adapter-node": "6.0.0",
+    "@sveltejs/kit": "3.0.1",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "@types/node": "26.6.5",
+    "svelte": "5.57.2",
+    "svelte-check": "4.7.6",
+    "typescript": "6.0.3",
+    "vite": "8.3.4",
+    "vitest": "5.0.3"
   },
   "scripts": {
-    "start": "node build",
+    "start": "node server.mjs",
     "dev": "vite dev",
     "prebuild": "node ../scripts/write-build-info.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "test": "TMPDIR=/tmp TMP=/tmp TEMP=/tmp vitest run --config ./vitest.config.ts --configLoader runner",
+    "test": "node --test tests/runtime-origin.test.mjs && TMPDIR=/tmp TMP=/tmp TEMP=/tmp vitest run --config ./vitest.config.ts --configLoader runner",
     "error-add": "node ../err_gen.js --action add --error-file ./src/errors.json",
     "error-delete": "node ../err_gen.js --action delete --error-file ./src/errors.json",
     "error-rm": "node ../err_gen.js --action delete --error-file ./src/errors.json",

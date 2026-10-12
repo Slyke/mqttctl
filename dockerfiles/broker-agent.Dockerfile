@@ -1,6 +1,6 @@
-FROM eclipse-mosquitto:2.0.21 AS build
+FROM eclipse-mosquitto:2.1.2-alpine AS build
 
-ARG RUST_VERSION=1.83.0
+ARG RUST_VERSION=1.99.0
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
@@ -23,7 +23,7 @@ COPY broker-agent/src ./src
 COPY . /workspace
 RUN cargo build --locked --release
 
-FROM eclipse-mosquitto:2.0.21
+FROM eclipse-mosquitto:2.1.2-alpine
 
 COPY --from=build /workspace/broker-agent/target/release/mqttctl-broker-agent /usr/local/bin/mqttctl-broker-agent
 

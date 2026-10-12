@@ -1,4 +1,4 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
 import { getAppContext } from '$server/context';
 import { createCorrelationId } from '$server/utils/ids';
 import { AppError, toErrorBody } from '$server/logging/errors';
@@ -115,7 +115,9 @@ export const handle: Handle = async ({ event, resolve }) => {
   return response;
 };
 
-export const handleError: HandleServerError = ({ error, event }) => {
+export const handleError: HandleServerError = ({ error, event, kind }) => {
+  if (kind !== 'unknown') return;
+
   const body = toFrontendHandleErrorBody({ error });
   const rootCause = error instanceof AppError && error.cause ? error.cause : error;
   event.locals.appContext?.logger.error({

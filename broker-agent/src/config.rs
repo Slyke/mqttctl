@@ -60,6 +60,12 @@ pub struct BrokerKeyFilesConfig {
 pub struct DynsecBootstrapConfig {
     pub username: String,
     pub password: String,
+    #[serde(default = "default_dynsec_file_owner")]
+    pub file_owner: String,
+}
+
+fn default_dynsec_file_owner() -> String {
+    String::from("mosquitto")
 }
 
 #[derive(Debug, Clone, Deserialize)]

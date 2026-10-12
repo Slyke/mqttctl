@@ -6,7 +6,7 @@
   "type": "module",
   "main": "src/index.js",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "start": "node src/index.js",
@@ -19,9 +19,9 @@
     "error-validate": "node scripts/error-gen.mjs --action validate"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "json5": "^2.2.3",
-    "undici": "^7.16.0",
-    "zod": "^3.25.76"
+    "undici": "^8.11.2",
+    "zod": "^4.6.6"
   }
 }

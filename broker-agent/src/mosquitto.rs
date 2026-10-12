@@ -2,7 +2,7 @@ use std::{fs, path::Path, process::Stdio, sync::Arc, time::Duration};
 
 use nix::{
     sys::signal::{kill, Signal},
-    unistd::Pid,
+    unistd::{Pid, Uid, User},
 };
 use serde::Serialize;
 use serde_json::json;
@@ -113,6 +113,38 @@ impl MosquittoSupervisor {
             )
         })?;
 
+        // mosquitto_ctrl creates a private file owned by its caller. When the
+        // agent runs as root, Mosquitto drops privileges before reading it.
+        // Resolve the owner before creating the file so a bad account name
+        // cannot leave behind an unusable bootstrap file.
+        let file_owner = if Uid::effective().is_root() {
+            Some(
+                User::from_name(&bootstrap.file_owner)
+                    .map_err(|error| {
+                        AppError::new(
+                            "mosquitto::ensure_dynsec_state",
+                            "Failed resolving the dynamic security file owner.",
+                            "CONFIG_VALIDATION_FAILED",
+                            500,
+                            correlation_id.map(str::to_string),
+                            Some(json!({ "fileOwner": bootstrap.file_owner, "cause": error.to_string() })),
+                        )
+                    })?
+                    .ok_or_else(|| {
+                        AppError::new(
+                            "mosquitto::ensure_dynsec_state",
+                            "Dynamic security file owner does not exist.",
+                            "CONFIG_VALIDATION_FAILED",
+                            500,
+                            correlation_id.map(str::to_string),
+                            Some(json!({ "fileOwner": bootstrap.file_owner })),
+                        )
+                    })?,
+            )
+        } else {
+            None
+        };
+
         if let Some(parent) = state_path.parent() {
             fs::create_dir_all(parent).map_err(|error| {
                 AppError::new(
@@ -179,6 +211,20 @@ impl MosquittoSupervisor {
                 correlation_id.map(str::to_string),
                 Some(json!(result)),
             ));
+        }
+
+        if let Some(owner) = file_owner {
+            std::os::unix::fs::chown(state_path, Some(owner.uid.as_raw()), Some(owner.gid.as_raw()))
+                .map_err(|error| {
+                    AppError::new(
+                        "mosquitto::ensure_dynsec_state",
+                        "Failed setting the dynamic security file owner.",
+                        "BROKER_PROCESS_FAILED",
+                        500,
+                        correlation_id.map(str::to_string),
+                        Some(json!({ "path": state_path, "fileOwner": bootstrap.file_owner, "cause": error.to_string() })),
+                    )
+                })?;
         }
 
         self.logger.info(
