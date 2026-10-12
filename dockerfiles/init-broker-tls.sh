@@ -5,7 +5,8 @@ set -eu
 [ "${MQTTCTL_AUTO_TLS:-true}" = true ] || exit 0
 
 tls_dir=${MQTTCTL_TLS_DIR:-/mosquitto/config/certs}
-public_dir=${MQTTCTL_TLS_PUBLIC_DIR:-/run/mqttctl-broker-public}
+# Export is opt-in: standalone/non-root deployments may have no shared volume.
+public_dir=${MQTTCTL_TLS_PUBLIC_DIR:-}
 san=${MQTTCTL_TLS_SAN:-DNS:broker-agent,DNS:localhost,IP:127.0.0.1}
 owner=${MQTTCTL_TLS_MOSQUITTO_OWNER:-mosquitto}
 umask 077
@@ -80,10 +81,12 @@ for service in mosquitto broker-agent; do
 done
 
 # The API mounts only this public volume. No private key leaves the broker.
-for path in ca/ca.crt mosquitto/tls.crt broker-agent/tls.crt; do
-    mkdir -p "$public_dir/$(dirname "$path")"
-    chmod 755 "$public_dir" "$public_dir/$(dirname "$path")"
-    cp "$tls_dir/$path" "$public_dir/$path"
-    chmod 644 "$public_dir/$path"
-done
+if [ -n "$public_dir" ]; then
+    for path in ca/ca.crt mosquitto/tls.crt broker-agent/tls.crt; do
+        mkdir -p "$public_dir/$(dirname "$path")"
+        chmod 755 "$public_dir" "$public_dir/$(dirname "$path")"
+        cp "$tls_dir/$path" "$public_dir/$path"
+        chmod 644 "$public_dir/$path"
+    done
+fi
 printf '[broker-tls] TLS certificates ready; existing keys preserved.\n'

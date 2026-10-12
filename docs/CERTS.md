@@ -63,7 +63,7 @@ Set these on the broker-agent container:
 | --- | --- | --- |
 | `MQTTCTL_AUTO_TLS` | `true` | Set to `false` to skip automatic generation and public certificate copying. |
 | `MQTTCTL_TLS_DIR` | `/mosquitto/config/certs` | Persistent private certificate directory. |
-| `MQTTCTL_TLS_PUBLIC_DIR` | `/run/mqttctl-broker-public` | Public certificate export volume. |
+| `MQTTCTL_TLS_PUBLIC_DIR` | unset | Optional public certificate export directory. Compose sets `/run/mqttctl-broker-public` and mounts a writable volume there. |
 | `MQTTCTL_TLS_SAN` | `DNS:broker-agent,DNS:localhost,IP:127.0.0.1` | Names/IPs for newly generated service certificates. |
 | `MQTTCTL_TLS_MOSQUITTO_OWNER` | `mosquitto` | Owner for a newly generated Mosquitto private key when startup runs as root. |
 
@@ -73,7 +73,7 @@ Changing the SAN setting does not replace existing certificates. Renew service c
 
 Set `MQTTCTL_AUTO_TLS=false` to supply your own certificates. Configure the Mosquitto `certfile`/`keyfile` and broker-agent `listen.https.certFile`/`keyFile`, and mount the trusted CA into the API. Populate the public certificate volume yourself, or replace that mount with a read-only directory containing only public certificates. Keep certificate verification enabled with `broker.agent.insecure: false` and `broker.tls.insecure: false`.
 
-For deployments outside Compose, mount persistent storage for the private certificate directory and share only the public export with the API. The startup script creates files; listener addresses and TLS selection remain explicit configuration.
+For deployments outside Compose, mount persistent storage for the private certificate directory. Public export is optional: set `MQTTCTL_TLS_PUBLIC_DIR` only when sharing a writable export volume with the API. A non-root broker can generate and reuse keys in its writable private directory without writing to `/run`. If certificates already exist in another location (such as `/mosquitto/certs`), set `MQTTCTL_TLS_DIR` to that location for locally managed CA/key pairs, or disable auto-generation for externally managed certificates. The startup script creates files; listener addresses and TLS selection remain explicit configuration.
 
 ## Regression check
 
@@ -81,4 +81,4 @@ For deployments outside Compose, mount persistent storage for the private certif
 sh tests/broker-tls.test.sh
 ```
 
-This checks first-start logs, CA/hostname validation, private-key permissions, public-only export, restart preservation, and rejection of incomplete/mismatched pairs.
+This checks first-start logs, CA/hostname validation, private-key permissions, public-only export, restart preservation, rejection of incomplete/mismatched pairs, and startup without an export volume. Run the same script inside the broker image as UID/GID 1883 to cover non-root deployments.

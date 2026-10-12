@@ -44,6 +44,7 @@ services:
     command: cargo run
     environment:
       MQTTCTL_BROKER_AGENT_CONFIG_PATH: /workspace/config/compose/mqtt-agent/broker-agent.config.json
+      MQTTCTL_TLS_PUBLIC_DIR: /run/mqttctl-broker-public
       MQTTCTL_LOG_CONSOLE_FORMAT: text
     volumes:
       - .:/workspace

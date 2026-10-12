@@ -45,3 +45,14 @@ printf 'PASS: incomplete and mismatched pairs fail without replacing keys\n'
 MQTTCTL_AUTO_TLS=false MQTTCTL_TLS_DIR="$test_dir/disabled" sh "$init"
 [ ! -e "$test_dir/disabled" ]
 printf 'PASS: automatic generation can be disabled\n'
+
+# Standalone containers running as UID 1883 cannot create /run directories.
+# They must still start when no public export volume was configured.
+unset MQTTCTL_TLS_PUBLIC_DIR
+export MQTTCTL_TLS_DIR="$test_dir/no-export"
+sh "$init" > "$test_dir/no-export.log"
+[ -s "$MQTTCTL_TLS_DIR/mosquitto/tls.key" ]
+[ -s "$MQTTCTL_TLS_DIR/broker-agent/tls.crt" ]
+sh "$init" > "$test_dir/no-export-restart.log"
+! grep -q 'Auto-generated' "$test_dir/no-export-restart.log"
+printf 'PASS: startup and restart without a public export volume\n'
