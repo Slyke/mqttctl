@@ -27,8 +27,13 @@ FROM eclipse-mosquitto:2.1.2-alpine
 
 COPY --from=build /workspace/broker-agent/target/release/mqttctl-broker-agent /usr/local/bin/mqttctl-broker-agent
 
-RUN mkdir -p /mosquitto/config /mosquitto/data /etc/mqttctl
+RUN apk add --no-cache openssl curl \
+    && mkdir -p /mosquitto/config /mosquitto/data /etc/mqttctl
 
-EXPOSE 1883 9001 3900 3943
+COPY --chmod=755 dockerfiles/init-broker-tls.sh dockerfiles/broker-agent-entrypoint.sh /usr/local/bin/
+
+EXPOSE 1883 8883 9001 3900 3943
+
+ENTRYPOINT ["/usr/local/bin/broker-agent-entrypoint.sh"]
 
 CMD ["/usr/local/bin/mqttctl-broker-agent"]

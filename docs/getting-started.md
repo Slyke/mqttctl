@@ -109,7 +109,9 @@ Notes:
 
 ## Quick Start: TLS
 
-Use [`CERTS.md`](./CERTS.md) when you need any of these:
+Fresh Compose setups generate a self-signed local CA and separate broker-agent/Mosquitto certificates at image startup. Internal connections use verified HTTPS on port 3943 and MQTT TLS on port 8883. Generation is logged, and restarting preserves the keys under `config/compose/mqtt-agent/certs/`.
+
+Existing installations must update their runtime JSON5 broker settings; see the upgrade steps in [`CERTS.md`](./CERTS.md). That guide also covers:
 
 - Mosquitto TLS listeners
 - broker-agent HTTPS

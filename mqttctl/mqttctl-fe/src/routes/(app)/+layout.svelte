@@ -1,6 +1,10 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { toStore } from 'svelte/store';
   import { formatDisplayCode } from '$lib/strings/display';
+
+  // Bridge rune-backed page state into this legacy component.
+  const pageUrl = toStore(() => page.url);
 
   export let data: {
     currentUser: {
@@ -30,7 +34,7 @@
     <nav class="nav-list">
       {#each data.navItems as item}
         {@const target = `${data.basePath}${item.href}`}
-        <a class:active={page.url.pathname === target} class="nav-link" href={target}>
+        <a class:active={$pageUrl.pathname === target} class="nav-link" href={target}>
           <span>{item.label}</span>
         </a>
       {/each}
@@ -49,13 +53,13 @@
   </aside>
 
   <main
-    class:app-main-full={page.url.pathname === `${data.basePath}/audit`}
-    class:app-main-mqtt={page.url.pathname === `${data.basePath}/mqtt`}
+    class:app-main-full={$pageUrl.pathname === `${data.basePath}/audit`}
+    class:app-main-mqtt={$pageUrl.pathname === `${data.basePath}/mqtt`}
     class:app-main-wide={[
       `${data.basePath}/dashboard`,
       `${data.basePath}/dynsec`,
       `${data.basePath}/mqtt`
-    ].includes(page.url.pathname)}
+    ].includes($pageUrl.pathname)}
     class="app-main"
   >
     <slot />

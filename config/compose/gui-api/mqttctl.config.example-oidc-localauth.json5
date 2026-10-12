@@ -84,11 +84,11 @@
 
   broker: {
     host: 'broker-agent',
-    port: 1883,
+    port: 8883,
     dynsecAdminUsername: 'admin',
     controlBinaryPath: 'mosquitto_ctrl',
     agent: {
-      baseUrl: 'http://broker-agent:3900',
+      baseUrl: 'https://broker-agent:3943',
       timeoutMs: 60000,
       insecure: false,
     },
@@ -100,5 +100,10 @@
       brokerPublicKey: '/mosquitto/config/certs/broker-agent/tls.crt',
     },
     mqttClientId: 'mqttctl-compose-admin',
+    tls: {
+      enabled: true,
+      caFile: '/mosquitto/config/certs/ca/ca.crt',
+      insecure: false,
+    },
   },
 }

@@ -6,9 +6,9 @@ services:
     restart: unless-stopped
     depends_on:
       broker-agent:
-        condition: service_started
+        condition: service_healthy
       mqttctl-mcp-keygen:
-        condition: service_started
+        condition: service_completed_successfully
     environment:
       PORT: "3000"
       HOST: "0.0.0.0"
@@ -18,6 +18,7 @@ services:
       MQTTCTL_DB_KIND: sqlite
       MQTTCTL_SQLITE_PATH: /app/data/mqttctl.sqlite
       MQTTCTL_UI_OVERRIDE_CSS_PATH: /app/config/custom.css
+      NODE_EXTRA_CA_CERTS: /mosquitto/config/certs/ca/ca.crt
       MQTTCTL_LOG_CONSOLE_FORMAT: text
       MQTTCTL_MCP_AUTH_ENABLED: "true"
       MQTTCTL_MCP_PUBLIC_KEY_PATH: /run/mqttctl-mcp-public/signing-public.pem
@@ -27,6 +28,7 @@ services:
       - ./config/compose/gui-api/custom.css:/app/config/custom.css:ro
       - ./config/compose/gui-api/app-data:/app/data
       - mqttctl-mcp-public:/run/mqttctl-mcp-public:ro
+      - mqttctl-broker-public:/mosquitto/config/certs:ro
     ports:
       - "3000:3000"
 
@@ -41,9 +43,17 @@ services:
       - ./config/compose/mqtt-agent/broker-agent.config.json:/etc/mqttctl/broker-agent.config.json:ro
       - ./config/compose/mqtt-agent:/mosquitto/config
       - ./config/compose/mqtt-agent/shared/data:/mosquitto/data
+      - mqttctl-broker-public:/run/mqttctl-broker-public
     ports:
       - "1883:1883"
+      - "8883:8883"
       - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--cacert", "/mosquitto/config/certs/ca/ca.crt", "https://localhost:3943/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
   mqttctl-mcp-keygen:
     build:
@@ -94,6 +104,7 @@ services:
       start_period: 20s
 
 volumes:
+  mqttctl-broker-public:
   mqttctl-mcp-private:
   mqttctl-mcp-public:
   mqttctl-mcp-data:

@@ -10,3 +10,10 @@ docs/images/
 config/compose/shared/data
 config/compose/shared/log
 config/compose/app-data
+config/compose/gui-api/app-data
+config/compose/gui-api/mqttctl.config.json5
+config/compose/gui-api/mqttctl.secrets.json5
+config/compose/mqtt-agent/shared/data
+config/compose/mqtt-agent/shared/log
+config/compose/mqtt-agent/certs
+tmp

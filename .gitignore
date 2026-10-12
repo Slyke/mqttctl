@@ -25,4 +25,5 @@ config/compose/gui-api/mqttctl.config.json5
 *.secrets.json
 *.secrets.json5
 config/nginx-dev-proxy/certs/*.pem
+config/compose/mqtt-agent/certs/
 local.readme.md

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { goto, invalidateAll, replaceState as replacePageState } from '$app/navigation';
   import { page } from '$app/state';
+  import { toStore } from 'svelte/store';
   import { copyTableAsJson, type TableJsonPayload } from '$lib/actions/copy-table-json';
   import defaultDynsecLanguage from '$lib/i18n/dynsec.en.json';
   import { apiRequest } from '$lib/stores/api';
@@ -11,6 +12,9 @@
   type FeedbackTarget = 'global' | 'assignment' | 'defaults' | 'group' | 'role';
   type DynsecLanguage = typeof defaultDynsecLanguage;
   type DynsecLanguageKey = keyof DynsecLanguage;
+
+  // Bridge rune-backed page state into this legacy component.
+  const pageUrl = toStore(() => page.url);
 
   export let data: {
     state: {
@@ -102,8 +106,8 @@
   let defaultRoleName = data.clientDefaults.defaultRoleName ?? '';
   let defaultRolePriority = data.clientDefaults.defaultRolePriority;
   let aclTypeMenu: HTMLDetailsElement | null = null;
-  let appliedPageSearch = page.url.search;
-  let currentQuerySearch = page.url.search;
+  let appliedPageSearch = $pageUrl.search;
+  let currentQuerySearch = $pageUrl.search;
   let createFormsOpen = new URLSearchParams(currentQuerySearch).get('create') === '1';
   let effectivePermissionsOpen = new URLSearchParams(currentQuerySearch).get('permissions') === '1';
   let showAssignmentPriorities = data.showAssignmentPriorities;
@@ -123,9 +127,9 @@
   let selectedRoleAclsTableJson: TableJsonPayload;
   let groupsTableJson: TableJsonPayload;
 
-  $: if (page.url.search !== appliedPageSearch) {
-    appliedPageSearch = page.url.search;
-    currentQuerySearch = page.url.search;
+  $: if ($pageUrl.search !== appliedPageSearch) {
+    appliedPageSearch = $pageUrl.search;
+    currentQuerySearch = $pageUrl.search;
     createFormsOpen = new URLSearchParams(currentQuerySearch).get('create') === '1';
     effectivePermissionsOpen = new URLSearchParams(currentQuerySearch).get('permissions') === '1';
   }
@@ -344,7 +348,7 @@
     }
 
     const nextSearch = query.toString();
-    return nextSearch ? `${page.url.pathname}?${nextSearch}` : page.url.pathname;
+    return nextSearch ? `${$pageUrl.pathname}?${nextSearch}` : $pageUrl.pathname;
   };
 
   const navigateWithQuery = async ({
@@ -367,7 +371,7 @@
     });
   };
 
-  const replaceQueryState = ({
+  const replaceQueryState = async ({
     updates,
     nextCreateFormsOpen = createFormsOpen,
     nextEffectivePermissionsOpen = effectivePermissionsOpen
@@ -384,7 +388,7 @@
     effectivePermissionsOpen = nextEffectivePermissionsOpen;
 
     if (typeof window !== 'undefined') {
-      window.history.replaceState(window.history.state, '', nextUrl);
+      await replacePageState(nextUrl, page.state);
     }
   };
 
@@ -640,7 +644,7 @@
   const toggleCreateForms = async () => {
     const nextCreateFormsOpen = !createFormsOpen;
 
-    replaceQueryState({
+    await replaceQueryState({
       updates: { create: nextCreateFormsOpen ? '1' : null },
       nextCreateFormsOpen
     });
@@ -649,7 +653,7 @@
   const toggleEffectivePermissions = async () => {
     const nextEffectivePermissionsOpen = !effectivePermissionsOpen;
 
-    replaceQueryState({
+    await replaceQueryState({
       updates: { permissions: nextEffectivePermissionsOpen ? '1' : null },
       nextEffectivePermissionsOpen
     });

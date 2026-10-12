@@ -13,6 +13,7 @@ RUN apk add --no-cache \
         ca-certificates \
         cmake \
         curl \
+        openssl \
         perl \
         pkgconf \
     && curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain ${RUST_VERSION}
@@ -22,4 +23,8 @@ COPY broker-agent/src ./src
 
 RUN cargo fetch --locked || true
 
-EXPOSE 1883 9001 3900 3943
+COPY --chmod=755 dockerfiles/init-broker-tls.sh dockerfiles/broker-agent-entrypoint.sh /usr/local/bin/
+
+EXPOSE 1883 8883 9001 3900 3943
+
+ENTRYPOINT ["/usr/local/bin/broker-agent-entrypoint.sh"]
