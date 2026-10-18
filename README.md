@@ -159,6 +159,25 @@ Default local endpoints:
 
 ## Image Publishing
 
+The control-plane and broker-agent images support `linux/amd64` and
+`linux/arm64`, including Raspberry Pi with a **64-bit OS**. Both images
+include native binaries, so both need architecture-specific builds.
+
+Create a Buildx builder once (omit creation if you already have a suitable one):
+
+```bash
+docker buildx create --name mqttctl-multiarch --driver docker-container --bootstrap
+```
+
+The builder needs native nodes for both platforms or working QEMU emulation.
+Check `docker buildx inspect mqttctl-multiarch --bootstrap`. See
+[Docker's multi-platform guide](https://docs.docker.com/build/building/multi-platform/).
+
+Replace the example username and domain below, and log in to both registries
+before publishing. Run the Git tag command once per release, from a clean,
+committed checkout. Each build pushes all three tags to both registries;
+Docker selects the matching architecture when pulling an image.
+
 Control-plane image:
 
 ```bash
@@ -171,14 +190,19 @@ git tag -a "$VERSION" -m "$VERSION"
 
 SHA=$(git rev-parse --short=12 HEAD)
 
-docker build -t mqttctl:build -f ./dockerfiles/mqttctl.Dockerfile .
-
+TAGS=()
 for TAG in latest "$VERSION" "$VERSION-$SHA"; do
-  docker tag mqttctl:build "$USERNAME/mqttctl:$TAG"
-  docker tag mqttctl:build "$DOMAIN/$USERNAME/mqttctl:$TAG"
-  docker push "$USERNAME/mqttctl:$TAG" # Dockerhub
-  docker push "$DOMAIN/$USERNAME/mqttctl:$TAG" # Custom
+  TAGS+=(-t "$USERNAME/mqttctl:$TAG") # Dockerhub
+  TAGS+=(-t "$DOMAIN/$USERNAME/mqttctl:$TAG") # Custom
 done
+
+docker buildx build --builder mqttctl-multiarch \
+  --platform linux/amd64,linux/arm64 \
+  --build-arg BUILD_HASH="$SHA" \
+  "${TAGS[@]}" \
+  -f ./dockerfiles/mqttctl.Dockerfile --push .
+
+docker buildx imagetools inspect "$USERNAME/mqttctl:$VERSION-$SHA"
 ```
 
 Broker-agent image:
@@ -193,14 +217,19 @@ git tag -a "$VERSION" -m "$VERSION"
 
 SHA=$(git rev-parse --short=12 HEAD)
 
-docker build -t mqttctl-broker-agent:build -f ./dockerfiles/broker-agent.Dockerfile .
-
+TAGS=()
 for TAG in latest "$VERSION" "$VERSION-$SHA"; do
-  docker tag mqttctl-broker-agent:build "$USERNAME/mqttctl-broker-agent:$TAG"
-  docker tag mqttctl-broker-agent:build "$DOMAIN/$USERNAME/mqttctl-broker-agent:$TAG"
-  docker push "$USERNAME/mqttctl-broker-agent:$TAG" # Dockerhub
-  docker push "$DOMAIN/$USERNAME/mqttctl-broker-agent:$TAG" # Custom
+  TAGS+=(-t "$USERNAME/mqttctl-broker-agent:$TAG") # Dockerhub
+  TAGS+=(-t "$DOMAIN/$USERNAME/mqttctl-broker-agent:$TAG") # Custom
 done
+
+docker buildx build --builder mqttctl-multiarch \
+  --platform linux/amd64,linux/arm64 \
+  --build-arg BUILD_HASH="$SHA" \
+  "${TAGS[@]}" \
+  -f ./dockerfiles/broker-agent.Dockerfile --push .
+
+docker buildx imagetools inspect "$USERNAME/mqttctl-broker-agent:$VERSION-$SHA"
 ```
 
 MQTTCtl MCP image:

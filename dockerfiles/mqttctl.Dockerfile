@@ -12,6 +12,8 @@ COPY mqttctl/mqttctl-api/package.json ./mqttctl-api/package.json
 RUN npm ci
 
 COPY . /workspace
+# Keep this stage on the target platform (including native dependencies).
+ARG BUILD_HASH
 RUN npm run build && npm prune --omit=dev
 
 FROM node:24-bookworm-slim

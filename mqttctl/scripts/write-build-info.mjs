@@ -64,7 +64,7 @@ const version = typeof packageJson.version === 'string' && packageJson.version.t
   ? packageJson.version.trim()
   : '0.0.0';
 const gitDir = resolveGitDir({ startDir: workspaceRoot });
-const commitHash = gitDir ? resolveHeadCommit({ gitDir }) ?? 'unknown' : 'unknown';
+const commitHash = process.env.BUILD_HASH?.trim() || (gitDir ? (resolveHeadCommit({ gitDir }) ?? 'unknown') : 'unknown');
 const buildInfo = {
   version,
   commitHash,
