@@ -159,48 +159,73 @@ Default local endpoints:
 
 ## Image Publishing
 
-Control-plane image:
+### Multi-architecture UI and broker-agent
+
+The default `docker-bake.hcl` group builds **only** `mqttctl` and
+`mqttctl-broker-agent` for `linux/amd64` and `linux/arm64`. The ARM64
+variant supports Raspberry Pi with a **64-bit OS**; 32-bit ARM is not included.
+Both Dockerfile stages use the target architecture, including Rust and the
+native SQLite/Argon2 Node modules.
+
+Create a Buildx builder once (omit creation if you already have a suitable one):
 
 ```bash
-USERNAME=YOURUSERNAME
-DOMAIN=yourdomain.xyz
-VERSION=v0.0.8
-git tag -a "$VERSION" -m "$VERSION"
-# git tag -f -a "$VERSION" -m "$VERSION"
-# git push --force origin "$VERSION"
-
-SHA=$(git rev-parse --short=12 HEAD)
-
-docker build -t mqttctl:build -f ./dockerfiles/mqttctl.Dockerfile .
-
-for TAG in latest "$VERSION" "$VERSION-$SHA"; do
-  docker tag mqttctl:build "$USERNAME/mqttctl:$TAG"
-  docker tag mqttctl:build "$DOMAIN/$USERNAME/mqttctl:$TAG"
-  docker push "$USERNAME/mqttctl:$TAG" # Dockerhub
-  docker push "$DOMAIN/$USERNAME/mqttctl:$TAG" # Custom
-done
+docker buildx create --name mqttctl-multiarch --driver docker-container --bootstrap
 ```
 
-Broker-agent image:
+The builder needs native nodes for both platforms or working QEMU emulation.
+Check `docker buildx inspect mqttctl-multiarch --bootstrap`. Emulated Rust
+compilation can be much slower than a native ARM64 builder. See
+[Docker's multi-platform guide](https://docs.docker.com/build/building/multi-platform/).
+
+Preview the build plan, then build and publish both images:
 
 ```bash
-USERNAME=YOURUSERNAME
-DOMAIN=yourdomain.xyz
-VERSION=v0.0.8
-git tag -a "$VERSION" -m "$VERSION"
-# git tag -f -a "$VERSION" -m "$VERSION"
-# git push --force origin "$VERSION"
+export IMAGE_PREFIX=slyke
+export VERSION=v0.0.8
+export BUILD_HASH=$(git rev-parse --short=12 HEAD)
+# Optional second registry (log in to it too):
+# export EXTRA_IMAGE_PREFIX=registry.example.com/slyke
 
-SHA=$(git rev-parse --short=12 HEAD)
+docker login
+docker buildx bake -f docker-bake.hcl --builder mqttctl-multiarch --print
+docker buildx bake -f docker-bake.hcl --builder mqttctl-multiarch --push
+```
 
-docker build -t mqttctl-broker-agent:build -f ./dockerfiles/broker-agent.Dockerfile .
+For releases, each image gets `latest`, `$VERSION`, and
+`$VERSION-$BUILD_HASH` tags. Each tag references a manifest containing both
+architectures, so Docker selects the right image automatically. `BUILD_HASH`
+also sets the version label compiled into both applications. Ordinary builds
+without that argument continue to detect the commit from Git.
 
-for TAG in latest "$VERSION" "$VERSION-$SHA"; do
-  docker tag mqttctl-broker-agent:build "$USERNAME/mqttctl-broker-agent:$TAG"
-  docker tag mqttctl-broker-agent:build "$DOMAIN/$USERNAME/mqttctl-broker-agent:$TAG"
-  docker push "$USERNAME/mqttctl-broker-agent:$TAG" # Dockerhub
-  docker push "$DOMAIN/$USERNAME/mqttctl-broker-agent:$TAG" # Custom
-done
+The defaults (`VERSION=dev`, `BUILD_HASH=local`) tag only `dev` and never
+update `latest`. Use a clean, committed checkout when publishing a release.
+To build just one image, append `mqttctl` or `broker-agent` to the bake command.
+
+For a local multi-platform build without publishing:
+
+```bash
+mkdir -p tmp/multiarch
+docker buildx bake -f docker-bake.hcl --builder mqttctl-multiarch \
+  --set 'mqttctl.output=type=oci,dest=tmp/multiarch/mqttctl.tar' \
+  --set 'broker-agent.output=type=oci,dest=tmp/multiarch/broker-agent.tar'
+```
+
+The archives contain both architectures. Classic Docker image storage cannot
+`--load` a multi-platform image; use the OCI archives or a registry, or override
+`*.platform` to one platform for a local `--load` smoke test.
+
+Verify the published manifests:
+
+```bash
+docker buildx imagetools inspect "$IMAGE_PREFIX/mqttctl:$VERSION-$BUILD_HASH"
+docker buildx imagetools inspect "$IMAGE_PREFIX/mqttctl-broker-agent:$VERSION-$BUILD_HASH"
+```
+
+Check build-plan coverage without compiling or publishing:
+
+```bash
+python3 tests/multiarch-build.test.py
 ```
 
 MQTTCtl MCP image:

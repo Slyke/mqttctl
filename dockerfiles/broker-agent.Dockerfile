@@ -21,6 +21,8 @@ COPY broker-agent/Cargo.toml broker-agent/Cargo.lock broker-agent/errors.json ./
 COPY broker-agent/src ./src
 
 COPY . /workspace
+# Keep this stage on the target platform (including native dependencies).
+ARG BUILD_HASH
 RUN cargo build --locked --release
 
 FROM eclipse-mosquitto:2.1.2-alpine

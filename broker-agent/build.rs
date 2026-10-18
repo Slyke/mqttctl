@@ -8,9 +8,12 @@ fn main() {
     let git_dir = resolve_git_dir(env::current_dir().ok().as_deref());
     register_git_rerun_paths(git_dir.as_deref());
 
-    let commit_hash = git_dir
-        .as_deref()
-        .and_then(resolve_head_commit)
+    println!("cargo:rerun-if-env-changed=BUILD_HASH");
+    let commit_hash = env::var("BUILD_HASH")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .map(|value| value.trim().to_owned())
+        .or_else(|| git_dir.as_deref().and_then(resolve_head_commit))
         .unwrap_or_else(|| String::from("unknown"));
     let label = format!("v{version}-{commit_hash}");
 
