@@ -63,6 +63,7 @@ MCP_READ_BEARER_TOKENS=[{name:'reader',token:'secret'}]
 
 At least one of `MCP_READ_BEARER_TOKENS` or `MCP_READWRITE_BEARER_TOKENS` is required. Token entries may use `tokenFile` instead of `token`; this is preferred with Docker/Kubernetes secrets.
 
+Use Node.js 24.22.1 or newer (`nvm install` uses the repository's `.nvmrc`).
 Run the standalone commands from this `mcp/` directory. Generate the signing keypair:
 
 ```bash
@@ -138,7 +139,7 @@ MQTTCtl MCP image, from the repository root:
 ```bash
 USERNAME=YOURUSERNAME
 DOMAIN=yourdomain.xyz
-VERSION=v0.0.8
+VERSION=v0.0.9
 git tag -a "$VERSION" -m "$VERSION"
 # git tag -f -a "$VERSION" -m "$VERSION"
 # git push --force origin "$VERSION"

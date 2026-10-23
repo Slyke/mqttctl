@@ -20,11 +20,14 @@ Notes:
 
 ### Control Plane
 
-The repo is expected to run in WSL2, and non-interactive shells may not load `nvm` automatically.
+The control plane and MCP server require Node.js 24.22.1 or newer. The root
+`.nvmrc` and Docker images pin Node.js 24.22.1 LTS. The repo is expected to run
+in WSL2, and non-interactive shells may not load `nvm` automatically.
 
 ```bash
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+nvm install
 cd mqttctl
 npm install
 npm run check

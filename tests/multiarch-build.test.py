@@ -29,14 +29,14 @@ class BuildPlanTest(unittest.TestCase):
             self.assertNotIn("output", target)  # Publishing is explicit.
 
     def test_release_tags_and_metadata_for_both_registries(self):
-        plan = self.plan(VERSION="v0.0.8", BUILD_HASH="d90b7f4d7c4b",
+        plan = self.plan(VERSION="v0.0.9", BUILD_HASH="d90b7f4d7c4b",
                          IMAGE_PREFIX="example", EXTRA_IMAGE_PREFIX="registry.example/example")
         for name, target in plan["target"].items():
             image = "mqttctl" if name == "mqttctl" else "mqttctl-broker-agent"
             expected = {
                 f"{prefix}/{image}:{tag}"
                 for prefix in ("example", "registry.example/example")
-                for tag in ("latest", "v0.0.8", "v0.0.8-d90b7f4d7c4b")
+                for tag in ("latest", "v0.0.9", "v0.0.9-d90b7f4d7c4b")
             }
             self.assertEqual(set(target["tags"]), expected)
             self.assertEqual(target["args"]["BUILD_HASH"], "d90b7f4d7c4b")

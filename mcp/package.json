@@ -1,12 +1,12 @@
 {
   "name": "mqttctl-mcp",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Stateful MCP server for the mqttctl HTTP API.",
   "license": "MIT",
   "type": "module",
   "main": "src/index.js",
   "engines": {
-    "node": ">=22.19.0"
+    "node": ">=24.22.1"
   },
   "scripts": {
     "start": "node src/index.js",

@@ -183,7 +183,7 @@ Control-plane image:
 ```bash
 USERNAME=YOURUSERNAME
 DOMAIN=yourdomain.xyz
-VERSION=v0.0.8
+VERSION=v0.0.9
 git tag -a "$VERSION" -m "$VERSION"
 # git tag -f -a "$VERSION" -m "$VERSION"
 # git push --force origin "$VERSION"
@@ -210,7 +210,7 @@ Broker-agent image:
 ```bash
 USERNAME=YOURUSERNAME
 DOMAIN=yourdomain.xyz
-VERSION=v0.0.8
+VERSION=v0.0.9
 git tag -a "$VERSION" -m "$VERSION"
 # git tag -f -a "$VERSION" -m "$VERSION"
 # git push --force origin "$VERSION"
@@ -237,7 +237,7 @@ MQTTCtl MCP image:
 ```bash
 USERNAME=YOURUSERNAME
 DOMAIN=yourdomain.xyz
-VERSION=v0.0.8
+VERSION=v0.0.9
 git tag -a "$VERSION" -m "$VERSION"
 # git tag -f -a "$VERSION" -m "$VERSION"
 # git push --force origin "$VERSION"

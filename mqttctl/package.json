@@ -1,6 +1,6 @@
 {
   "name": "mqttctl-workspace",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -8,7 +8,7 @@
     "mqttctl-api"
   ],
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.22.1"
   },
   "scripts": {
     "start": "npm run start --workspace mqttctl-fe",
